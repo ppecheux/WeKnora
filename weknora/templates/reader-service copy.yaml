@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "weknora.fullname" . }}-reader
+  labels:
+    {{- include "weknora.labels" . | nindent 4 }}
+    app.kubernetes.io/component: reader
+spec:
+  type: {{ .Values.reader.service.type }}
+  ports:
+    - port: {{ .Values.reader.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "weknora.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: reader

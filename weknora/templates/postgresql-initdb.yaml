@@ -1,0 +1,10 @@
+# create a configmap for the initdb scripts
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgresql-initdb-scripts
+data:
+  00-init-db.sql: | 
+    {{- .Files.Get "config/migrations/paradedb/00-init-db.sql" | nindent 4 }}
+  01-migrate-to-paradedb.sql: | 
+    {{- .Files.Get "config/migrations/paradedb/01-migrate-to-paradedb.sql" | nindent 4 }}

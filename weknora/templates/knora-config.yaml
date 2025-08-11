@@ -1,0 +1,6 @@
+kind: ConfigMap
+metadata:
+  name: weknora-config
+data:
+  weknora.conf: |
+    {{- .Files.Get "config/config.yaml" | nindent 4 }}

@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "weknora.fullname" . }}-front
+  labels:
+    {{- include "weknora.labels" . | nindent 4 }}
+    app.kubernetes.io/component: front
+spec:
+  type: {{ .Values.front.service.type }}
+  ports:
+    - port: {{ .Values.front.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "weknora.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: front

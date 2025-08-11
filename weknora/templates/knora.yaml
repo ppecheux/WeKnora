@@ -1,0 +1,174 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "weknora.fullname" . }}-knora
+  labels:
+    {{- include "weknora.labels" . | nindent 4 }}
+    app.kubernetes.io/component: knora
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "weknora.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: knora
+  serviceName: {{ include "weknora.fullname" . }}-knora
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "weknora.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        app.kubernetes.io/component: knora
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "weknora.serviceAccountName" . }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: knora
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.knora.image.repository }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.knora.service.port }}
+              protocol: TCP
+          {{- with .Values.knora.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.knora.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.knora.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: weknora-config
+              mountPath: /app/config
+          env:
+            - name: GIN_MODE
+              value: {{ .Values.knora.env.GIN_MODE | default "" | quote }}
+            - name: DB_DRIVER
+              value: {{ .Values.knora.env.DB_DRIVER | default "" | quote }}
+            - name: DB_HOST
+              value: {{ .Values.knora.env.DB_HOST | default "" | quote }}
+            - name: DB_PORT
+              value: {{ .Values.knora.env.DB_PORT | default "" | quote }}
+            - name: DB_USER
+              value: {{ .Values.knora.env.DB_USER | default "" | quote }}
+            - name: DB_PASSWORD
+              value: {{ .Values.knora.env.DB_PASSWORD | default "" | quote }}
+            - name: DB_NAME
+              value: {{ .Values.knora.env.DB_NAME | default "" | quote }}
+            - name: TZ
+              value: {{ .Values.knora.env.TZ | default "Asia/Shanghai" | quote }}
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: {{ .Values.knora.env.OTEL_EXPORTER_OTLP_ENDPOINT | default "jaeger:4317" | quote }}
+            - name: OTEL_SERVICE_NAME
+              value: {{ .Values.knora.env.OTEL_SERVICE_NAME | default "WeKnora" | quote }}
+            - name: OTEL_TRACES_EXPORTER
+              value: {{ .Values.knora.env.OTEL_TRACES_EXPORTER | default "otlp" | quote }}
+            - name: OTEL_METRICS_EXPORTER
+              value: {{ .Values.knora.env.OTEL_METRICS_EXPORTER | default "none" | quote }}
+            - name: OTEL_LOGS_EXPORTER
+              value: {{ .Values.knora.env.OTEL_LOGS_EXPORTER | default "none" | quote }}
+            - name: OTEL_PROPAGATORS
+              value: {{ .Values.knora.env.OTEL_PROPAGATORS | default "tracecontext,baggage" | quote }}
+            - name: RETRIEVE_DRIVER
+              value: {{ .Values.knora.env.RETRIEVE_DRIVER | default "" | quote }}
+            - name: ELASTICSEARCH_ADDR
+              value: {{ .Values.knora.env.ELASTICSEARCH_ADDR | default "" | quote }}
+            - name: ELASTICSEARCH_USERNAME
+              value: {{ .Values.knora.env.ELASTICSEARCH_USERNAME | default "" | quote }}
+            - name: ELASTICSEARCH_PASSWORD
+              value: {{ .Values.knora.env.ELASTICSEARCH_PASSWORD | default "" | quote }}
+            - name: ELASTICSEARCH_INDEX
+              value: {{ .Values.knora.env.ELASTICSEARCH_INDEX | default "" | quote }}
+            - name: DOCREADER_ADDR
+              value: {{ .Values.knora.env.DOCREADER_ADDR | default ( printf "%s-reader:%s" ( include "weknora.fullname" . ) .Values.reader.service.port ) | quote }}
+            - name: STORAGE_TYPE
+              value: {{ .Values.knora.env.STORAGE_TYPE | default "" | quote }}
+            - name: LOCAL_STORAGE_BASE_DIR
+              value: {{ .Values.knora.env.LOCAL_STORAGE_BASE_DIR | default "" | quote }}
+            - name: MINIO_ENDPOINT
+              value: {{ .Values.knora.env.MINIO_ENDPOINT | default "" | quote }}
+            - name: MINIO_ACCESS_KEY_ID
+              value: {{ .Values.knora.env.MINIO_ACCESS_KEY_ID | default "" | quote }}
+            - name: MINIO_SECRET_ACCESS_KEY
+              value: {{ .Values.knora.env.MINIO_SECRET_ACCESS_KEY | default "" | quote }}
+            - name: MINIO_BUCKET_NAME
+              value: {{ .Values.knora.env.MINIO_BUCKET_NAME | default "" | quote }}
+            - name: OLLAMA_BASE_URL
+              value: {{ .Values.knora.env.OLLAMA_BASE_URL | default "" | quote }}
+            - name: STREAM_MANAGER_TYPE
+              value: {{ .Values.knora.env.STREAM_MANAGER_TYPE | default "" | quote }}
+            - name: REDIS_ADDR
+              value: {{ printf "%s:%s" (.Values.knora.env.REDIS_HOST | default "") (.Values.knora.env.REDIS_PORT | default "") | quote }}
+            - name: REDIS_PASSWORD
+              value: {{ .Values.knora.env.REDIS_PASSWORD | default "" | quote }}
+            - name: REDIS_DB
+              value: {{ .Values.knora.env.REDIS_DB | default "" | quote }}
+            - name: REDIS_PREFIX
+              value: {{ .Values.knora.env.REDIS_PREFIX | default "" | quote }}
+            - name: ENABLE_GRAPH_RAG
+              value: {{ .Values.knora.env.ENABLE_GRAPH_RAG | default "" | quote }}
+            - name: TENANT_AES_KEY
+              value: {{ .Values.knora.env.TENANT_AES_KEY | default "" | quote }}
+            - name: INIT_LLM_MODEL_NAME
+              value: {{ .Values.knora.env.INIT_LLM_MODEL_NAME | default "" | quote }}
+            - name: INIT_LLM_MODEL_BASE_URL
+              value: {{ .Values.knora.env.INIT_LLM_MODEL_BASE_URL | default "" | quote }}
+            - name: INIT_LLM_MODEL_API_KEY
+              value: {{ .Values.knora.env.INIT_LLM_MODEL_API_KEY | default "" | quote }}
+            - name: INIT_EMBEDDING_MODEL_NAME
+              value: {{ .Values.knora.env.INIT_EMBEDDING_MODEL_NAME | default "" | quote }}
+            - name: INIT_EMBEDDING_MODEL_BASE_URL
+              value: {{ .Values.knora.env.INIT_EMBEDDING_MODEL_BASE_URL | default "" | quote }}
+            - name: INIT_EMBEDDING_MODEL_API_KEY
+              value: {{ .Values.knora.env.INIT_EMBEDDING_MODEL_API_KEY | default "" | quote }}
+            - name: INIT_EMBEDDING_MODEL_DIMENSION
+              value: {{ .Values.knora.env.INIT_EMBEDDING_MODEL_DIMENSION | default "" | quote }}
+            - name: INIT_EMBEDDING_MODEL_ID
+              value: {{ .Values.knora.env.INIT_EMBEDDING_MODEL_ID | default "" | quote }}
+            - name: INIT_RERANK_MODEL_NAME
+              value: {{ .Values.knora.env.INIT_RERANK_MODEL_NAME | default "" | quote }}
+            - name: INIT_RERANK_MODEL_BASE_URL
+              value: {{ .Values.knora.env.INIT_RERANK_MODEL_BASE_URL | default "" | quote }}
+            - name: INIT_RERANK_MODEL_API_KEY
+              value: {{ .Values.knora.env.INIT_RERANK_MODEL_API_KEY | default "" | quote }}
+            - name: INIT_TEST_TENANT_ID
+              value: {{ .Values.knora.env.INIT_TEST_TENANT_ID | default "" | quote }}
+            - name: INIT_TEST_KNOWLEDGE_BASE_ID
+              value: {{ .Values.knora.env.INIT_TEST_KNOWLEDGE_BASE_ID | default "" | quote }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: weknora-config
+          configMap:
+            name: weknora-config

@@ -1,0 +1,2414 @@
+---
+# Source: weknora/charts/postgresql/templates/primary/networkpolicy.yaml
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: wkr-postgresql
+  namespace: "default"
+  labels:
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: postgresql
+    app.kubernetes.io/version: 16.1.0
+    helm.sh/chart: postgresql-14.0.0
+    app.kubernetes.io/component: primary
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: wkr
+      app.kubernetes.io/name: postgresql
+      app.kubernetes.io/component: primary
+  policyTypes:
+    - Ingress
+    - Egress
+  egress:
+    # Allow dns resolution
+    - ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+    # Allow outbound connections to read-replicas
+    - ports:
+        - port: 5432
+        - port: 5432
+      to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: wkr
+              app.kubernetes.io/name: postgresql
+              app.kubernetes.io/component: read
+  ingress:
+    - ports:
+        - port: 5432
+---
+# Source: weknora/charts/postgresql/templates/read/networkpolicy.yaml
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: wkr-postgresql-read
+  namespace: "default"
+  labels:
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: postgresql
+    app.kubernetes.io/version: 16.1.0
+    helm.sh/chart: postgresql-14.0.0
+    app.kubernetes.io/component: read
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: wkr
+      app.kubernetes.io/name: postgresql
+      app.kubernetes.io/component: read
+  policyTypes:
+    - Ingress
+    - Egress
+  egress:
+    # Allow dns resolution
+    - ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+    # Allow outbound connections to primary
+    - ports:
+        - port: 5432
+        - port: 5432
+      to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: wkr
+              app.kubernetes.io/name: postgresql
+              app.kubernetes.io/component: primary
+  ingress:
+    - ports:
+        - port: 5432
+---
+# Source: weknora/charts/redis/templates/networkpolicy.yaml
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: wkr-redis
+  namespace: "default"
+  labels:
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/version: 8.2.0
+    helm.sh/chart: redis-22.0.1
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: wkr
+      app.kubernetes.io/name: redis
+  policyTypes:
+    - Ingress
+    - Egress
+  egress:
+    - {}
+  ingress:
+    # Allow inbound connections
+    - ports:
+        - port: 6379
+---
+# Source: weknora/charts/redis/templates/master/pdb.yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: wkr-redis-master
+  namespace: "default"
+  labels:
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/version: 8.2.0
+    helm.sh/chart: redis-22.0.1
+    app.kubernetes.io/component: master
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: wkr
+      app.kubernetes.io/name: redis
+      app.kubernetes.io/component: master
+---
+# Source: weknora/charts/redis/templates/replicas/pdb.yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: wkr-redis-replicas
+  namespace: "default"
+  labels:
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/version: 8.2.0
+    helm.sh/chart: redis-22.0.1
+    app.kubernetes.io/component: replica
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: wkr
+      app.kubernetes.io/name: redis
+      app.kubernetes.io/component: replica
+---
+# Source: weknora/charts/postgresql/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: wkr-postgresql
+  namespace: "default"
+  labels:
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: postgresql
+    app.kubernetes.io/version: 16.1.0
+    helm.sh/chart: postgresql-14.0.0
+automountServiceAccountToken: false
+---
+# Source: weknora/charts/redis/templates/master/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+automountServiceAccountToken: false
+metadata:
+  name: wkr-redis-master
+  namespace: "default"
+  labels:
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/version: 8.2.0
+    helm.sh/chart: redis-22.0.1
+---
+# Source: weknora/charts/redis/templates/replicas/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+automountServiceAccountToken: false
+metadata:
+  name: wkr-redis-replica
+  namespace: "default"
+  labels:
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/version: 8.2.0
+    helm.sh/chart: redis-22.0.1
+---
+# Source: weknora/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: wkr-weknora
+  labels:
+    helm.sh/chart: weknora-0.1.0
+    app.kubernetes.io/name: weknora
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+automountServiceAccountToken: true
+---
+# Source: weknora/charts/postgresql/templates/secrets.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: wkr-postgresql
+  namespace: "default"
+  labels:
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: postgresql
+    app.kubernetes.io/version: 16.1.0
+    helm.sh/chart: postgresql-14.0.0
+type: Opaque
+data:
+  postgres-password: "ZlBaQVVZZGRZbg=="
+  password: "d2Vrbm9yYQ=="
+  # We don't auto-generate LDAP password when it's not provided as we do for other passwords
+---
+# Source: weknora/charts/redis/templates/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: wkr-redis
+  namespace: "default"
+  labels:
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/version: 8.2.0
+    helm.sh/chart: redis-22.0.1
+type: Opaque
+data:
+  redis-password: "VDNuSmVDU04zbg=="
+---
+# Source: weknora/charts/redis/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wkr-redis-configuration
+  namespace: "default"
+  labels:
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/version: 8.2.0
+    helm.sh/chart: redis-22.0.1
+data:
+  redis.conf: |-
+    # User-supplied common configuration:
+    # Enable AOF https://redis.io/topics/persistence#append-only-file
+    appendonly yes
+    # Disable RDB persistence, AOF persistence already enabled.
+    save ""
+    # End of common configuration
+  master.conf: |-
+    dir /data
+    # User-supplied master configuration:
+    rename-command FLUSHDB ""
+    rename-command FLUSHALL ""
+    # End of master configuration
+  replica.conf: |-
+    dir /data
+    # User-supplied replica configuration:
+    rename-command FLUSHDB ""
+    rename-command FLUSHALL ""
+    # End of replica configuration
+  users.acl: |-
+---
+# Source: weknora/charts/redis/templates/health-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wkr-redis-health
+  namespace: "default"
+  labels:
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/version: 8.2.0
+    helm.sh/chart: redis-22.0.1
+data:
+  ping_readiness_local.sh: |-
+    #!/bin/bash
+
+    [[ -f $REDIS_PASSWORD_FILE ]] && export REDIS_PASSWORD="$(< "${REDIS_PASSWORD_FILE}")"
+    [[ -n "$REDIS_PASSWORD" ]] && export REDISCLI_AUTH="$REDIS_PASSWORD"
+    response=$(
+      timeout -s 15 $1 \
+      redis-cli \
+        -h localhost \
+        -p $REDIS_PORT \
+        ping
+    )
+    if [ "$?" -eq "124" ]; then
+      echo "Timed out"
+      exit 1
+    fi
+    if [ "$response" != "PONG" ]; then
+      echo "$response"
+      exit 1
+    fi
+  ping_liveness_local.sh: |-
+    #!/bin/bash
+
+    [[ -f $REDIS_PASSWORD_FILE ]] && export REDIS_PASSWORD="$(< "${REDIS_PASSWORD_FILE}")"
+    [[ -n "$REDIS_PASSWORD" ]] && export REDISCLI_AUTH="$REDIS_PASSWORD"
+    response=$(
+      timeout -s 15 $1 \
+      redis-cli \
+        -h localhost \
+        -p $REDIS_PORT \
+        ping
+    )
+    if [ "$?" -eq "124" ]; then
+      echo "Timed out"
+      exit 1
+    fi
+    responseFirstWord=$(echo $response | head -n1 | awk '{print $1;}')
+    if [ "$response" != "PONG" ] && [ "$responseFirstWord" != "LOADING" ] && [ "$responseFirstWord" != "MASTERDOWN" ]; then
+      echo "$response"
+      exit 1
+    fi
+  ping_readiness_master.sh: |-
+    #!/bin/bash
+
+    [[ -f $REDIS_MASTER_PASSWORD_FILE ]] && export REDIS_MASTER_PASSWORD="$(< "${REDIS_MASTER_PASSWORD_FILE}")"
+    [[ -n "$REDIS_MASTER_PASSWORD" ]] && export REDISCLI_AUTH="$REDIS_MASTER_PASSWORD"
+    response=$(
+      timeout -s 15 $1 \
+      redis-cli \
+        -h $REDIS_MASTER_HOST \
+        -p $REDIS_MASTER_PORT_NUMBER \
+        ping
+    )
+    if [ "$?" -eq "124" ]; then
+      echo "Timed out"
+      exit 1
+    fi
+    if [ "$response" != "PONG" ]; then
+      echo "$response"
+      exit 1
+    fi
+  ping_liveness_master.sh: |-
+    #!/bin/bash
+
+    [[ -f $REDIS_MASTER_PASSWORD_FILE ]] && export REDIS_MASTER_PASSWORD="$(< "${REDIS_MASTER_PASSWORD_FILE}")"
+    [[ -n "$REDIS_MASTER_PASSWORD" ]] && export REDISCLI_AUTH="$REDIS_MASTER_PASSWORD"
+    response=$(
+      timeout -s 15 $1 \
+      redis-cli \
+        -h $REDIS_MASTER_HOST \
+        -p $REDIS_MASTER_PORT_NUMBER \
+        ping
+    )
+    if [ "$?" -eq "124" ]; then
+      echo "Timed out"
+      exit 1
+    fi
+    responseFirstWord=$(echo $response | head -n1 | awk '{print $1;}')
+    if [ "$response" != "PONG" ] && [ "$responseFirstWord" != "LOADING" ]; then
+      echo "$response"
+      exit 1
+    fi
+  ping_readiness_local_and_master.sh: |-
+    script_dir="$(dirname "$0")"
+    exit_status=0
+    "$script_dir/ping_readiness_local.sh" $1 || exit_status=$?
+    "$script_dir/ping_readiness_master.sh" $1 || exit_status=$?
+    exit $exit_status
+  ping_liveness_local_and_master.sh: |-
+    script_dir="$(dirname "$0")"
+    exit_status=0
+    "$script_dir/ping_liveness_local.sh" $1 || exit_status=$?
+    "$script_dir/ping_liveness_master.sh" $1 || exit_status=$?
+    exit $exit_status
+---
+# Source: weknora/charts/redis/templates/scripts-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wkr-redis-scripts
+  namespace: "default"
+  labels:
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/version: 8.2.0
+    helm.sh/chart: redis-22.0.1
+data:
+  start-master.sh: |
+    #!/bin/bash
+
+    [[ -f $REDIS_PASSWORD_FILE ]] && export REDIS_PASSWORD="$(< "${REDIS_PASSWORD_FILE}")"
+    if [[ -f /opt/bitnami/redis/mounted-etc/master.conf ]];then
+        cp /opt/bitnami/redis/mounted-etc/master.conf /opt/bitnami/redis/etc/master.conf
+    fi
+    if [[ -f /opt/bitnami/redis/mounted-etc/redis.conf ]];then
+        cp /opt/bitnami/redis/mounted-etc/redis.conf /opt/bitnami/redis/etc/redis.conf
+    fi
+    if [[ -f /opt/bitnami/redis/mounted-etc/users.acl ]];then
+        cp /opt/bitnami/redis/mounted-etc/users.acl /opt/bitnami/redis/etc/users.acl
+    fi
+    ARGS=("--port" "${REDIS_PORT}")
+    ARGS+=("--requirepass" "${REDIS_PASSWORD}")
+    ARGS+=("--masterauth" "${REDIS_PASSWORD}")
+    ARGS+=("--include" "/opt/bitnami/redis/etc/redis.conf")
+    ARGS+=("--include" "/opt/bitnami/redis/etc/master.conf")
+    exec redis-server "${ARGS[@]}"
+  start-replica.sh: |
+    #!/bin/bash
+
+    get_port() {
+        hostname="$1"
+        type="$2"
+
+        port_var=$(echo "${hostname^^}_SERVICE_PORT_$type" | sed "s/-/_/g")
+        port=${!port_var}
+
+        if [ -z "$port" ]; then
+            case $type in
+                "SENTINEL")
+                    echo 26379
+                    ;;
+                "REDIS")
+                    echo 6379
+                    ;;
+            esac
+        else
+            echo $port
+        fi
+    }
+
+    get_full_hostname() {
+        hostname="$1"
+        full_hostname="${hostname}.${HEADLESS_SERVICE}"
+        echo "${full_hostname}"
+    }
+
+    REDISPORT=$(get_port "$HOSTNAME" "REDIS")
+    HEADLESS_SERVICE="wkr-redis-headless.default.svc.cluster.local"
+
+    [[ -f $REDIS_PASSWORD_FILE ]] && export REDIS_PASSWORD="$(< "${REDIS_PASSWORD_FILE}")"
+    [[ -f $REDIS_MASTER_PASSWORD_FILE ]] && export REDIS_MASTER_PASSWORD="$(< "${REDIS_MASTER_PASSWORD_FILE}")"
+    if [[ -f /opt/bitnami/redis/mounted-etc/replica.conf ]];then
+        cp /opt/bitnami/redis/mounted-etc/replica.conf /opt/bitnami/redis/etc/replica.conf
+    fi
+    if [[ -f /opt/bitnami/redis/mounted-etc/redis.conf ]];then
+        cp /opt/bitnami/redis/mounted-etc/redis.conf /opt/bitnami/redis/etc/redis.conf
+    fi
+    if [[ -f /opt/bitnami/redis/mounted-etc/users.acl ]];then
+        cp /opt/bitnami/redis/mounted-etc/users.acl /opt/bitnami/redis/etc/users.acl
+    fi
+
+    echo "" >> /opt/bitnami/redis/etc/replica.conf
+    echo "replica-announce-port $REDISPORT" >> /opt/bitnami/redis/etc/replica.conf
+    echo "replica-announce-ip $(get_full_hostname "$HOSTNAME")" >> /opt/bitnami/redis/etc/replica.conf
+    ARGS=("--port" "${REDIS_PORT}")
+    ARGS+=("--replicaof" "${REDIS_MASTER_HOST}" "${REDIS_MASTER_PORT_NUMBER}")
+    ARGS+=("--requirepass" "${REDIS_PASSWORD}")
+    ARGS+=("--masterauth" "${REDIS_MASTER_PASSWORD}")
+    ARGS+=("--include" "/opt/bitnami/redis/etc/redis.conf")
+    ARGS+=("--include" "/opt/bitnami/redis/etc/replica.conf")
+    exec redis-server "${ARGS[@]}"
+---
+# Source: weknora/templates/knora-config.yaml
+kind: ConfigMap
+metadata:
+  name: weknora-config
+data:
+  weknora.conf: |
+    # 服务器配置
+    server:
+      port: 8080
+      host: "0.0.0.0"
+
+    # 对话服务配置
+    conversation:
+      max_rounds: 5
+      keyword_threshold: 0.3
+      embedding_top_k: 10
+      vector_threshold: 0.5
+      rerank_threshold: 0.7
+      rerank_top_k: 5
+      fallback_strategy: "fixed"
+      fallback_response: "抱歉，我无法回答这个问题。"
+      fallback_prompt: |
+        你是一个专业、友好的AI助手。现在用户提出的问题超出了你的知识库范围，你需要生成一个礼貌且有帮助的回复。
+
+        ## 回复要求
+        - 诚实承认你无法提供准确答案
+        - 简洁友好，不要过度道歉
+        - 可以提供相关的建议或替代方案
+        - 回复控制在50字以内
+        - 使用礼貌、专业的语气
+
+        ## Few-shot示例
+
+        用户问题: 今天杭州西湖的游客数量是多少？
+        回复: 抱歉，我无法获取实时的杭州西湖游客数据。您可以通过杭州旅游官网或相关APP查询这一信息。
+
+        用户问题: 张教授的新论文发表了吗？
+        回复: 我没有张教授的最新论文信息。建议您查询学术数据库或直接联系张教授获取最新动态。
+
+        用户问题: 我的银行卡号是多少？
+        回复: 作为AI助手，我无法获取您的个人银行信息。请登录您的银行APP或联系银行客服获取相关信息。
+
+        ## 用户当前的问题是:
+        {{.Query}}
+      enable_rewrite: true
+      enable_rerank: true
+      rewrite_prompt_system: |
+        你是一个专注于指代消解和省略补全的智能助手，你的任务是根据历史对话上下文，清晰识别用户问题中的代词并替换为明确的主语，同时补全省略的关键信息。
+
+        请根据历史对话，对当前用户问题进行改写，目标是：
+        - 进行指代消解，将"它"、"这个"、"那个"、"他"、"她"、"它们"、"他们"、"她们"等代词替换为明确的主语
+        - 补全省略的关键信息，确保问题语义完整
+        - 保持问题的原始含义和表达方式不变
+        - 改写后必须也是一个问题
+        ## 改写目标
+        - 改写后的问题字数控制在30字以内
+        - 仅输出改写后的问题，不要输出任何解释，更不要尝试回答该问题，后面有其他助手回去解答此问题
+
+        ## Few-shot示例
+
+        示例1:
+        历史对话:
+        用户: 微信支付有哪些功能？
+        助手: 微信支付的主要功能包括转账、付款码、收款、信用卡还款等多种支付服务。
+
+        用户问题: 它的安全性
+        改写后: 微信支付的安全性
+
+        示例2:
+        历史对话:
+        用户: 苹果手机电池不耐用怎么办？
+        助手: 您可以通过降低屏幕亮度、关闭后台应用和定期更新系统来延长电池寿命。
+
+        用户问题: 这样会影响使用体验吗？
+        改写后: 降低屏幕亮度和关闭后台应用是否影响使用体验
+
+        示例3:
+        历史对话:
+        用户: 如何制作红烧肉？
+        助手: 红烧肉的制作需要先将肉块焯水，然后加入酱油、糖等调料慢炖。
+
+        用户问题: 需要炖多久？
+        改写后: 红烧肉需要炖多久
+
+        示例4:
+        历史对话:
+        用户: 北京到上海的高铁票价是多少？
+        助手: 北京到上海的高铁票价根据车次和座位类型不同，二等座约为553元，一等座约为933元。
+
+        用户问题: 时间呢？
+        改写后: 北京到上海的高铁时长
+
+        示例5:
+        历史对话:
+        用户: 如何注册微信账号？
+        助手: 注册微信账号需要下载微信APP，输入手机号，接收验证码，然后设置昵称和密码。
+
+        用户问题: 国外手机号可以吗？
+        改写后: 国外手机号是否可以注册微信账号
+      rewrite_prompt_user: |
+        ## 历史对话背景
+        {{range .Conversation}}
+        ------BEGIN------
+        用户的问题是：{{.Query}}
+        助手的回答是：{{.Answer}}
+        ------END------
+        {{end}}
+
+        ## 需要改写的用户问题
+        {{.Query}}
+
+        ## 改写后的问题
+      keywords_extraction_prompt: |
+        # 角色
+        你是一个专业的关键词提取助手，你的任务是根据用户的问题，提取出最重要的关键词/短语。
+
+        # 要求
+        - 总结用户的问题，并给出最重要的关键词/短语，关键词/短语的数量不超过5个
+        - 使用逗号作为分隔符来分隔关键词/短语
+        - 关键词/短语必须来自于用户的问题，不得虚构
+        - 不要输出任何解释，直接输出关键词/短语，不要有任何前缀、解释或标点符号，不要尝试回答该问题，后面有其他助手会去搜索此问题
+
+        # 输出格式
+        keyword1, keyword2, keyword3, keyword4, keyword5
+
+        # Examples
+
+        ## Example 1
+        USER: 如何提高英语口语水平？
+        ###############
+        Output: 英语口语, 口语水平, 提高英语口语, 英语口语提升, 英语口语练习
+
+        ## Example 2
+        USER: 最近上海有什么好玩的展览活动？
+        ###############
+        Output: 上海展览, 展览活动, 上海展览推荐, 展览活动推荐, 上海展览活动
+
+        ## Example 3
+        USER: 苹果手机电池不耐用怎么解决？
+        ###############
+        Output: 苹果手机, 电池不耐用, 电池优化, 电池寿命, 电池保养
+
+        ## Example 4
+        USER: Python的Logo长啥样？
+        ###############
+        Output: Python Logo
+
+        ## Example 5
+        USER: 如何使用iPhone连接WiFi？
+        ###############
+        Output: iPhone, 连接WiFi, 使用iPhone连接WiFi
+
+        # Real Data
+        USER: {{.Query}}
+
+      keywords_extraction_prompt_user: |
+        Output:
+
+      generate_summary_prompt: |
+        你是一个精准的文章总结专家。你的任务是提取并总结用户提供的文章或片段的核心内容。
+
+        ## 核心要求
+        - 总结结果长度为50-100个字，根据内容复杂度灵活调整
+        - 完全基于提供的文章内容生成总结，不添加任何未在文章中出现的信息
+        - 确保总结包含文章的关键信息点和主要结论
+        - 即使文章内容较复杂或专业，也必须尝试提取核心要点进行总结
+        - 直接输出总结结果，不包含任何引言、前缀或解释
+
+        ## 格式与风格
+        - 使用客观、中立的第三人称陈述语气
+        - 使用清晰简洁的中文表达
+        - 保持逻辑连贯性，确保句与句之间有合理过渡
+        - 避免重复使用相同的表达方式或句式结构
+
+        ## 注意事项
+        - 绝对不输出"无法生成"、"无法总结"、"内容不足"等拒绝回应的词语
+        - 不要照抄或参考示例中的任何内容，确保总结完全基于用户提供的新文章
+        - 对于任何文本都尽最大努力提取重点并总结，无论长度或复杂度
+        
+        ## 以下是用户给出的文章相关信息：
+
+      generate_session_title_prompt: |
+        你是一个专业的会话标题生成助手，你的任务是为用户提问创建简洁、精准且具描述性的标题。
+
+        ## 格式要求
+        - 标题长度必须在10个字以内
+        - 标题应准确反映用户问题的核心主题
+        - 使用名词短语结构，避免使用问句
+        - 保持简洁明了，删除非必要词语
+        - 不要使用"关于"、"如何"等冗余词语开头
+        - 直接输出标题文本，不要有任何前缀、解释或标点符号
+
+        ## Few-shot示例
+
+        用户问题: 如何提高英语口语水平？
+        标题: 英语口语提升
+
+        用户问题: 最近上海有什么好玩的展览活动？
+        标题: 上海展览推荐
+
+        用户问题: 苹果手机电池不耐用怎么解决？
+        标题: 苹果电池优化
+
+        ## 用户的问题是：
+      summary:
+        repeat_penalty: 1.0
+        temperature: 0.3
+        max_completion_tokens: 2048
+        no_match_prefix: |-
+          <think>
+          </think>
+          NO_MATCH
+        prompt: |
+          这是用户和助手之间的对话。当用户提出问题时，助手会基于特定的信息进行解答。助手首先在心中思考推理过程，然后向用户提供答案。
+          推理过程用 <think> </think> 标签包围，答案直接输出在think标签后面，即：
+          <think>
+          这里是推理过程
+          </think>
+          这里是答案
+        context_template: |
+          你是一个专业的智能信息检索助手，名为小微，犹如专业的高级秘书，依据检索到的信息回答用户问题。
+          当用户提出问题时，助手只能基于给定的信息进行解答，不能利用任何先验知识。
+
+          ## 回答问题规则
+          - 仅根据检索到的信息中的事实进行回复，不得运用任何先验知识，保持回应的客观性和准确性。
+          - 复杂问题和答案的按Markdown分结构展示，总述部分不需要拆分
+          - 如果是比较简单的答案，不需要把最终答案拆分的过于细碎
+          - 结果中使用的图片地址必须来自于检索到的信息，不得虚构
+          - 检查结果中的文字和图片是否来自于检索到的信息，如果扩展了不在检索到的信息中的内容，必须进行修改，直到得到最终答案
+          - 如果用户问题无法回答，只输出NO_MATCH即可，即：
+          <think>
+          </think>
+          NO_MATCH
+
+          ## 输出限制
+          - 以Markdown图文格式输出你的最终结果
+          - 输出内容要保证简短且全面，条理清晰，信息明确，不重复。
+
+          ## 当前时间是：
+          {{.CurrentTime}} {{.CurrentWeek}}
+
+          ## 检索到的信息如下：
+          ------BEGIN------
+          {{range .Contexts}}
+          {{.}}
+          {{end}}
+          ------END------
+
+          ## 用户当前的问题是：
+          {{.Query}}
+      extract_entities_prompt: |
+        ## 任务
+        用户提供的文本中，提取所有符合以下实体类型的实体：
+        EntityTypes: [Person, Organization, Location, Product, Event, Date, Work, Concept, Resource, Category, Operation]
+
+        ## 要求
+        1. 提取结果必须以JSON数组格式输出
+        2. 每个实体必须包含 title 和 type 字段，description 字段可选但强烈建议提供
+        3. 确保 type 字段的值必须严格从 EntityTypes 列表中选择，不得创建新类型
+        4. 如果无法确定实体类型，不要强行归类，宁可不提取该实体
+        5. 不要输出任何解释或额外内容，只输出JSON数组
+        6. 所有字段值不能包含HTML标签或其他代码
+        7. 如果实体有歧义，需在description中说明具体指代
+        8. 若没有找到任何实体，返回空数组 []
+
+        ## 实体提取规则
+        - Person: 真实或虚构的人物，包括历史人物、现代人物、文学角色等
+        - Organization: 公司、政府机构、团队、学校等组织实体
+        - Location: 地理位置、地标、国家、城市等
+        - Product: 商品、服务、品牌等商业产品
+        - Event: 事件、会议、节日、历史事件等
+        - Date: 日期、时间段、年代等时间相关信息
+        - Work: 书籍、电影、音乐、艺术作品等创作内容
+        - Concept: 抽象概念、思想、理论等
+        - Resource: 自然资源、信息资源、工具等
+        - Category: 分类、类别、领域等
+        - Operation: 操作、动作、方法、过程等
+
+        ## 提取步骤
+        1. 仔细阅读文本，识别可能的实体
+        2. 对每个识别到的实体，确定其最适合的实体类型（必须从EntityTypes中选择）
+        3. 为每个实体创建包含以下字段的JSON对象：
+           - title: 实体的标准名称，不包含修饰词，如引号等
+           - type: 从EntityTypes中选择的实体类型
+           - description: 对该实体的简明中文描述，应基于文本内容
+        4. 验证每个实体的所有字段是否正确且格式化恰当
+        5. 将所有实体对象合并为一个JSON数组
+        6. 检查最终JSON是否有效并符合要求
+
+        ## 示例
+        [输入]
+        文本： 《红楼梦》，又名《石头记》，是清代作家曹雪芹创作的中国古典四大名著之一，被誉为中国封建社会的百科全书。该书前80回由曹雪芹所著，后40回一般认为是高鹗所续。小说以贾、史、王、薛四大家族的兴衰为背景，以贾宝玉、林黛玉和薛宝钗的爱情悲剧为主线，刻画了以贾宝玉和金陵十二钗为中心的正邪两赋、贤愚并出的高度复杂的人物群像。成书于乾隆年间（1743年前后），是中国文学史上现实主义的高峰，对后世影响深远。
+
+        [输出]
+        [
+          {
+            "title": "红楼梦",
+            "type": "Work",
+            "description": "红楼梦是清代作家曹雪芹创作的中国古典四大名著之一，被誉为中国封建社会的百科全书"
+          },
+          {
+            "title": "石头记",
+            "type": "Work",
+            "description": "石头记是红楼梦的别名"
+          },
+          {
+            "title": "曹雪芹",
+            "type": "Person",
+            "description": "曹雪芹是清代作家，红楼梦的作者，创作了前80回"
+          },
+          {
+            "title": "高鹗",
+            "type": "Person",
+            "description": "高鹗是红楼梦后40回的续作者"
+          },
+          {
+            "title": "贾宝玉",
+            "type": "Person",
+            "description": "贾宝玉是红楼梦中的主要角色，爱情悲剧的主角之一"
+          },
+          {
+            "title": "林黛玉",
+            "type": "Person",
+            "description": "林黛玉是红楼梦中的主要角色，爱情悲剧的主角之一"
+          },
+          {
+            "title": "薛宝钗",
+            "type": "Person",
+            "description": "薛宝钗是红楼梦中的主要角色，爱情悲剧的主角之一"
+          },
+          {
+            "title": "金陵十二钗",
+            "type": "Concept",
+            "description": "金陵十二钗是红楼梦中以贾宝玉为中心的十二位主要女性角色"
+          },
+          {
+            "title": "乾隆年间",
+            "type": "Date",
+            "description": "乾隆年间指的是红楼梦成书的时间，约1743年前后"
+          },
+          {
+            "title": "四大家族",
+            "type": "Concept",
+            "description": "四大家族是红楼梦中的贾、史、王、薛四个家族，是小说的背景"
+          },
+          {
+            "title": "中国文学史",
+            "type": "Category",
+            "description": "红楼梦被视为中国文学史中现实主义的高峰之作"
+          }
+        ]
+
+      extract_relationships_prompt: |
+        ## 任务
+        从用户提供的实体数组中，提取实体之间存在的明确关系，形成结构化的关系网络。
+
+        ## 要求
+        1. 关系提取必须基于提供的文本内容，不得臆测不存在的关系
+        2. 结果必须以JSON数组格式输出，每个关系为数组中的一个对象
+        3. 每个关系对象必须包含 source, target, description 和 strength 字段
+        4. 不要输出任何解释或额外内容，只输出JSON数组
+        5. 若没有找到任何关系，返回空数组 []
+
+        ## 关系提取规则
+        - 只有在文本中明确体现的关系才应被提取
+        - 源实体(source)和目标实体(target)必须是实体数组中已有的实体
+        - 关系描述(description)应简明扼要地说明两个实体间的具体关系
+        - 关系强度(strength)应根据以下标准确定：
+          * 10分：直接创造/从属关系（如作者与作品、发明者与发明、母公司与子公司）
+          * 9分：同一实体的不同表现形式（如别名、曾用名）
+          * 8分：紧密相关且互相影响的关系（如密切合作伙伴、家庭成员）
+          * 7分：明确但非直接的关系（如作品中的角色、组织中的成员）
+          * 6分：间接关联且有明确联系（如同事关系、相似产品）
+          * 5分：存在关联但较为松散（如同一领域的不同概念）
+
+        ## 提取步骤
+        1. 仔细分析文本内容，确定哪些实体之间存在明确关系
+        2. 只考虑文本中明确提及的关系，不要臆测
+        3. 对每个找到的关系，确定：
+           - source: 关系的源实体标题（必须是实体列表中已有的实体）
+           - target: 关系的目标实体标题（必须是实体列表中已有的实体）
+           - description: 简明准确的关系描述（用中文表述）
+           - strength: 基于上述标准的关系强度（5-10之间的整数）
+        4. 检查每个关系是否双向：
+           - 如果关系是双向的（如"A是B的朋友"意味着"B也是A的朋友"），考虑是否需要创建反向关系
+           - 如果关系是单向的（如"A创作了B"），则只保留单向关系
+        5. 验证所有关系的一致性和合理性：
+           - 确保没有矛盾的关系（如A同时是B的父亲和兄弟）
+           - 确保关系描述与关系强度匹配
+        6. 将所有有效关系组织为JSON数组
+
+        ## 示例
+        [输入]
+        实体： [
+          {
+            "title": "红楼梦",
+            "type": "Work",
+            "description": "红楼梦是清代作家曹雪芹创作的中国古典四大名著之一，被誉为中国封建社会的百科全书"
+          },
+          {
+            "title": "石头记",
+            "type": "Work",
+            "description": "石头记是红楼梦的别名"
+          },
+          {
+            "title": "曹雪芹",
+            "type": "Person",
+            "description": "曹雪芹是清代作家，红楼梦的作者，创作了前80回"
+          },
+          {
+            "title": "高鹗",
+            "type": "Person",
+            "description": "高鹗是红楼梦后40回的续作者"
+          },
+          {
+            "title": "贾宝玉",
+            "type": "Person",
+            "description": "贾宝玉是红楼梦中的主要角色，爱情悲剧的主角之一"
+          },
+          {
+            "title": "林黛玉",
+            "type": "Person",
+            "description": "林黛玉是红楼梦中的主要角色，爱情悲剧的主角之一"
+          },
+          {
+            "title": "薛宝钗",
+            "type": "Person",
+            "description": "薛宝钗是红楼梦中的主要角色，爱情悲剧的主角之一"
+          },
+          {
+            "title": "四大家族",
+            "type": "Concept",
+            "description": "四大家族是红楼梦中的贾、史、王、薛四个家族，是小说的背景"
+          },
+          {
+            "title": "金陵十二钗",
+            "type": "Concept",
+            "description": "金陵十二钗是红楼梦中以贾宝玉为中心的十二位主要女性角色"
+          },
+          {
+            "title": "乾隆年间",
+            "type": "Date",
+            "description": "乾隆年间指的是红楼梦成书的时间，约1743年前后"
+          },
+          {
+            "title": "中国文学史",
+            "type": "Category",
+            "description": "红楼梦被视为中国文学史中现实主义的高峰之作"
+          }
+        ]
+
+        文本： 《红楼梦》，又名《石头记》，是清代作家曹雪芹创作的中国古典四大名著之一，被誉为中国封建社会的百科全书。该书前80回由曹雪芹所著，后40回一般认为是高鹗所续。小说以贾、史、王、薛四大家族的兴衰为背景，以贾宝玉、林黛玉和薛宝钗的爱情悲剧为主线，刻画了以贾宝玉和金陵十二钗为中心的正邪两赋、贤愚并出的高度复杂的人物群像。成书于乾隆年间（1743年前后），是中国文学史上现实主义的高峰，对后世影响深远。
+
+        [输出]
+        [
+          {
+            "source": "曹雪芹",
+            "target": "红楼梦",
+            "description": "曹雪芹是红楼梦的主要作者，创作了前80回",
+            "strength": 10
+          },
+          {
+            "source": "高鹗",
+            "target": "红楼梦",
+            "description": "高鹗是红楼梦后40回的续作者",
+            "strength": 10
+          },
+          {
+            "source": "红楼梦",
+            "target": "石头记",
+            "description": "石头记是红楼梦的别名",
+            "strength": 9
+          },
+          {
+            "source": "红楼梦",
+            "target": "中国文学史",
+            "description": "红楼梦被视为中国文学史中现实主义的高峰之作",
+            "strength": 7
+          },
+          {
+            "source": "贾宝玉",
+            "target": "林黛玉",
+            "description": "贾宝玉与林黛玉有深厚的爱情关系，是小说主线之一",
+            "strength": 8
+          },
+          {
+            "source": "贾宝玉",
+            "target": "薛宝钗",
+            "description": "贾宝玉与薛宝钗的关系是小说爱情悲剧主线的一部分",
+            "strength": 8
+          },
+          {
+            "source": "贾宝玉",
+            "target": "金陵十二钗",
+            "description": "贾宝玉是金陵十二钗故事的中心人物",
+            "strength": 8
+          },
+          {
+            "source": "红楼梦",
+            "target": "贾宝玉",
+            "description": "贾宝玉是红楼梦中的主要角色",
+            "strength": 7
+          },
+          {
+            "source": "红楼梦",
+            "target": "林黛玉",
+            "description": "林黛玉是红楼梦中的主要角色",
+            "strength": 7
+          },
+          {
+            "source": "红楼梦",
+            "target": "薛宝钗",
+            "description": "薛宝钗是红楼梦中的主要角色",
+            "strength": 7
+          },
+          {
+            "source": "红楼梦",
+            "target": "四大家族",
+            "description": "四大家族是红楼梦的背景设定",
+            "strength": 7
+          },
+          {
+            "source": "红楼梦",
+            "target": "金陵十二钗",
+            "description": "金陵十二钗是红楼梦中的重要概念",
+            "strength": 7
+          },
+          {
+            "source": "红楼梦",
+            "target": "乾隆年间",
+            "description": "红楼梦成书于乾隆年间，约1743年前后",
+            "strength": 6
+          }
+        ]
+
+    # 知识库配置
+    knowledge_base:
+      chunk_size: 512
+      chunk_overlap: 50
+      split_markers: ["\n\n", "\n", "。"]
+      image_processing:
+        enable_multimodal: true
+---
+# Source: weknora/templates/postgresql-initdb.yaml
+# create a configmap for the initdb scripts
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgresql-initdb-scripts
+data:
+  00-init-db.sql: |
+    -- Create extensions
+    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+    CREATE EXTENSION IF NOT EXISTS vector;
+    CREATE EXTENSION IF NOT EXISTS pg_trgm;
+    CREATE EXTENSION IF NOT EXISTS pg_search;
+
+
+    -- Create tenant table
+    CREATE TABLE IF NOT EXISTS tenants (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        api_key VARCHAR(64) NOT NULL,
+        retriever_engines JSONB NOT NULL DEFAULT '[]',
+        status VARCHAR(50) DEFAULT 'active',
+        business VARCHAR(255) NOT NULL,
+        storage_quota BIGINT NOT NULL DEFAULT 10737418240, -- 默认10GB配额(Bytes)
+        storage_used BIGINT NOT NULL DEFAULT 0, -- 已使用的存储空间(Bytes)
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        deleted_at TIMESTAMP WITH TIME ZONE
+    );
+
+    -- Set the starting value for tenants id sequence
+    ALTER SEQUENCE tenants_id_seq RESTART WITH 10000;
+
+    -- Add indexes
+    CREATE INDEX IF NOT EXISTS idx_tenants_api_key ON tenants(api_key);
+    CREATE INDEX IF NOT EXISTS idx_tenants_status ON tenants(status);
+
+    -- Create model table
+    CREATE TABLE IF NOT EXISTS models (
+        id VARCHAR(64) PRIMARY KEY DEFAULT uuid_generate_v4(),
+        tenant_id INTEGER NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        type VARCHAR(50) NOT NULL,
+        source VARCHAR(50) NOT NULL,
+        description TEXT,
+        parameters JSONB NOT NULL,
+        is_default BOOLEAN NOT NULL DEFAULT false,
+        status VARCHAR(50) NOT NULL DEFAULT 'active',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        deleted_at TIMESTAMP WITH TIME ZONE
+    );  
+
+    -- Add indexes for models
+    CREATE INDEX IF NOT EXISTS idx_models_type ON models(type);
+    CREATE INDEX IF NOT EXISTS idx_models_source ON models(source);
+
+    -- Create knowledge_base table
+    CREATE TABLE IF NOT EXISTS knowledge_bases (
+        id VARCHAR(36) PRIMARY KEY DEFAULT uuid_generate_v4(),
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        tenant_id INTEGER NOT NULL,
+        chunking_config JSONB NOT NULL DEFAULT '{"chunk_size": 512, "chunk_overlap": 50, "split_markers": ["\n\n", "\n", "。"], "keep_separator": true}',
+        image_processing_config JSONB NOT NULL DEFAULT '{"enable_multimodal": false, "model_id": ""}',
+        embedding_model_id VARCHAR(64) NOT NULL,
+        summary_model_id VARCHAR(64) NOT NULL,
+        rerank_model_id VARCHAR(64) NOT NULL,
+        vlm_model_id VARCHAR(64) NOT NULL,
+        cos_config JSONB NOT NULL DEFAULT '{}',
+        vlm_config JSONB NOT NULL DEFAULT '{}',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        deleted_at TIMESTAMP WITH TIME ZONE
+    );
+
+    -- Add indexes for knowledge_bases
+    CREATE INDEX IF NOT EXISTS idx_knowledge_bases_tenant_id ON knowledge_bases(tenant_id);
+
+    -- Create knowledge table
+    CREATE TABLE IF NOT EXISTS knowledges (
+        id VARCHAR(36) PRIMARY KEY DEFAULT uuid_generate_v4(),
+        tenant_id INTEGER NOT NULL,
+        knowledge_base_id VARCHAR(36) NOT NULL,
+        type VARCHAR(50) NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        source VARCHAR(128) NOT NULL,
+        parse_status VARCHAR(50) NOT NULL DEFAULT 'unprocessed',
+        enable_status VARCHAR(50) NOT NULL DEFAULT 'enabled',
+        embedding_model_id VARCHAR(64),
+        file_name VARCHAR(255),
+        file_type VARCHAR(50),
+        file_size BIGINT,
+        file_path TEXT,
+        file_hash VARCHAR(64),
+        storage_size BIGINT NOT NULL DEFAULT 0, -- 存储大小(Byte)
+        metadata JSONB,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        processed_at TIMESTAMP WITH TIME ZONE,
+        error_message TEXT,
+        deleted_at TIMESTAMP WITH TIME ZONE
+    );
+
+    -- Add indexes for knowledge
+    CREATE INDEX IF NOT EXISTS idx_knowledges_tenant_id ON knowledges(tenant_id);
+    CREATE INDEX IF NOT EXISTS idx_knowledges_base_id ON knowledges(knowledge_base_id);
+    CREATE INDEX IF NOT EXISTS idx_knowledges_parse_status ON knowledges(parse_status);
+    CREATE INDEX IF NOT EXISTS idx_knowledges_enable_status ON knowledges(enable_status);
+
+    -- Create session table
+    CREATE TABLE IF NOT EXISTS sessions (
+        id VARCHAR(36) PRIMARY KEY DEFAULT uuid_generate_v4(),
+        tenant_id INTEGER NOT NULL,
+        title VARCHAR(255),
+        description TEXT,
+        knowledge_base_id VARCHAR(36),
+        max_rounds INTEGER NOT NULL DEFAULT 5,
+        enable_rewrite BOOLEAN NOT NULL DEFAULT true,
+        fallback_strategy VARCHAR(255) NOT NULL DEFAULT 'fixed',
+        fallback_response TEXT NOT NULL DEFAULT '很抱歉，我暂时无法回答这个问题。',
+        keyword_threshold FLOAT NOT NULL DEFAULT 0.5,
+        vector_threshold FLOAT NOT NULL DEFAULT 0.5,
+        rerank_model_id VARCHAR(64),
+        embedding_top_k INTEGER NOT NULL DEFAULT 10,
+        rerank_top_k INTEGER NOT NULL DEFAULT 10,
+        rerank_threshold FLOAT NOT NULL DEFAULT 0.65,
+        summary_model_id VARCHAR(64),
+        summary_parameters JSONB NOT NULL DEFAULT '{}',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        deleted_at TIMESTAMP WITH TIME ZONE
+    );
+
+    -- Create Index for sessions
+    CREATE INDEX IF NOT EXISTS idx_sessions_tenant_id ON sessions(tenant_id);
+
+
+    -- Create message table
+    CREATE TABLE IF NOT EXISTS messages (
+        id VARCHAR(36) PRIMARY KEY DEFAULT uuid_generate_v4(),
+        request_id VARCHAR(36) NOT NULL,
+        session_id VARCHAR(36) NOT NULL,
+        role VARCHAR(50) NOT NULL,
+        content TEXT NOT NULL,
+        knowledge_references JSONB NOT NULL DEFAULT '[]',
+        is_completed BOOLEAN NOT NULL DEFAULT false,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        deleted_at TIMESTAMP WITH TIME ZONE
+    );
+
+    -- Create Index for messages
+    CREATE INDEX IF NOT EXISTS idx_messages_session_id ON messages(session_id); 
+
+
+    CREATE TABLE IF NOT EXISTS chunks (
+        id VARCHAR(36) PRIMARY KEY DEFAULT uuid_generate_v4(),
+        tenant_id INTEGER NOT NULL,
+        knowledge_base_id VARCHAR(36) NOT NULL,
+        knowledge_id VARCHAR(36) NOT NULL,
+        content TEXT NOT NULL,
+        chunk_index INTEGER NOT NULL,
+        is_enabled BOOLEAN NOT NULL DEFAULT true,
+        start_at INTEGER NOT NULL,
+        end_at INTEGER NOT NULL,
+        pre_chunk_id VARCHAR(36),
+        next_chunk_id VARCHAR(36),
+        chunk_type VARCHAR(20) NOT NULL DEFAULT 'text',
+        parent_chunk_id VARCHAR(36),
+        image_info TEXT,
+        relation_chunks JSONB,
+        indirect_relation_chunks JSONB,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        deleted_at TIMESTAMP WITH TIME ZONE
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_chunks_tenant_kg ON chunks(tenant_id, knowledge_id);
+    CREATE INDEX IF NOT EXISTS idx_chunks_parent_id ON chunks(parent_chunk_id);
+    CREATE INDEX IF NOT EXISTS idx_chunks_chunk_type ON chunks(chunk_type);
+
+    CREATE TABLE IF NOT EXISTS embeddings (
+        id SERIAL PRIMARY KEY,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+        source_id VARCHAR(64) NOT NULL,
+        source_type INTEGER NOT NULL,
+        chunk_id VARCHAR(64),
+        knowledge_id VARCHAR(64),
+        knowledge_base_id VARCHAR(64),
+        content TEXT,
+        dimension INTEGER NOT NULL,
+        embedding halfvec
+    );
+
+    CREATE UNIQUE INDEX IF NOT EXISTS embeddings_unique_source ON embeddings(source_id, source_type);
+    CREATE INDEX IF NOT EXISTS embeddings_search_idx ON embeddings
+    USING bm25 (id, knowledge_base_id, content, knowledge_id, chunk_id)
+    WITH (
+        key_field = 'id',
+        text_fields = '{
+            "content": {
+              "tokenizer": {"type": "chinese_lindera"}
+            }
+        }'
+    );
+    CREATE INDEX ON embeddings USING hnsw ((embedding::halfvec(3584)) halfvec_cosine_ops) WITH (m = 16, ef_construction = 64) WHERE (dimension = 3584);
+    CREATE INDEX ON embeddings USING hnsw ((embedding::halfvec(798)) halfvec_cosine_ops) WITH (m = 16, ef_construction = 64) WHERE (dimension = 798);
+  01-migrate-to-paradedb.sql: |
+    -- 迁移脚本：从PostgreSQL迁移到ParadeDB
+    -- 注意：在执行此脚本前，请确保已经备份了数据
+
+    -- 1. 导出数据（在PostgreSQL中执行）
+    -- pg_dump -U postgres -h localhost -p 5432 -d your_database > backup.sql
+
+    -- 2. 导入数据（在ParadeDB中执行）
+    -- psql -U postgres -h localhost -p 5432 -d your_database < backup.sql
+
+    -- 3. 验证数据
+
+
+    -- Insert some sample data
+    -- INSERT INTO tenants (id, name, description, status, api_key)
+    -- VALUES 
+    --     (1, 'Demo Tenant', 'This is a demo tenant for testing', 'active', 'sk-00000001abcdefg123456')
+    -- ON CONFLICT DO NOTHING;
+
+    -- SELECT setval('tenants_id_seq', (SELECT MAX(id) FROM tenants));
+
+
+    -- -- Create knowledge base
+    -- INSERT INTO knowledge_bases (id, name, description, tenant_id, chunking_config, image_processing_config, embedding_model_id)
+    -- VALUES 
+    --     ('kb-00000001', 'Default Knowledge Base', 'Default knowledge base for testing', 1, '{"chunk_size": 512, "chunk_overlap": 50, "separators": ["\n\n", "\n", "。"], "keep_separator": true}', '{"enable_multimodal": false, "model_id": ""}', 'model-embedding-00000001'),
+    --     ('kb-00000002', 'Test Knowledge Base', 'Test knowledge base for development', 1, '{"chunk_size": 512, "chunk_overlap": 50, "separators": ["\n\n", "\n", "。"], "keep_separator": true}', '{"enable_multimodal": false, "model_id": ""}', 'model-embedding-00000001'),
+    --     ('kb-00000003', 'Test Knowledge Base 2', 'Test knowledge base for development 2', 1, '{"chunk_size": 512, "chunk_overlap": 50, "separators": ["\n\n", "\n", "。"], "keep_separator": true}', '{"enable_multimodal": false, "model_id": ""}', 'model-embedding-00000001')
+    -- ON CONFLICT DO NOTHING;
+
+
+    SELECT COUNT(*) FROM tenants;
+    SELECT COUNT(*) FROM models;
+    SELECT COUNT(*) FROM knowledge_bases;
+    SELECT COUNT(*) FROM knowledges;
+
+
+    -- 测试中文全文搜索
+
+    -- 创建文档表
+    CREATE TABLE chinese_documents (
+        id SERIAL PRIMARY KEY,
+        title TEXT,
+        content TEXT,
+        published_date DATE
+    );
+
+    -- 在表上创建 BM25 索引，使用结巴分词器支持中文
+    CREATE INDEX idx_documents_bm25 ON chinese_documents
+    USING bm25 (id, content)
+    WITH (
+        key_field = 'id',
+        text_fields = '{
+            "content": {
+              "tokenizer": {"type": "chinese_lindera"}
+            }
+        }'
+    );
+
+    INSERT INTO chinese_documents (title, content, published_date)
+    VALUES 
+    ('人工智能的发展', '人工智能技术正在快速发展，影响了我们生活的方方面面。大语言模型是最近的一个重要突破。', '2023-01-15'),
+    ('机器学习基础', '机器学习是人工智能的一个重要分支，包括监督学习、无监督学习和强化学习等方法。', '2023-02-20'),
+    ('深度学习应用', '深度学习在图像识别、自然语言处理和语音识别等领域有广泛应用。', '2023-03-10'),
+    ('自然语言处理技术', '自然语言处理允许计算机理解、解释和生成人类语言，是人工智能的核心技术之一。', '2023-04-05'),
+    ('计算机视觉入门', '计算机视觉让机器能够"看到"并理解视觉世界，广泛应用于安防、医疗等领域。', '2023-05-12');
+
+    INSERT INTO chinese_documents (title, content, published_date)
+    VALUES 
+    ('hello world', 'hello world', '2023-05-12');
+---
+# Source: weknora/charts/postgresql/templates/primary/svc-headless.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: wkr-postgresql-hl
+  namespace: "default"
+  labels:
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: postgresql
+    app.kubernetes.io/version: 16.1.0
+    helm.sh/chart: postgresql-14.0.0
+    app.kubernetes.io/component: primary
+  annotations:
+    # Use this annotation in addition to the actual publishNotReadyAddresses
+    # field below because the annotation will stop being respected soon but the
+    # field is broken in some versions of Kubernetes:
+    # https://github.com/kubernetes/kubernetes/issues/58662
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+spec:
+  type: ClusterIP
+  clusterIP: None
+  # We want all pods in the StatefulSet to have their addresses published for
+  # the sake of the other Postgresql pods even before they're ready, since they
+  # have to be able to talk to each other in order to become ready.
+  publishNotReadyAddresses: true
+  ports:
+    - name: tcp-postgresql
+      port: 5432
+      targetPort: tcp-postgresql
+  selector:
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/name: postgresql
+    app.kubernetes.io/component: primary
+---
+# Source: weknora/charts/postgresql/templates/primary/svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: wkr-postgresql
+  namespace: "default"
+  labels:
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: postgresql
+    app.kubernetes.io/version: 16.1.0
+    helm.sh/chart: postgresql-14.0.0
+    app.kubernetes.io/component: primary
+spec:
+  type: ClusterIP
+  sessionAffinity: None
+  ports:
+    - name: tcp-postgresql
+      port: 5432
+      targetPort: tcp-postgresql
+      nodePort: null
+  selector:
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/name: postgresql
+    app.kubernetes.io/component: primary
+---
+# Source: weknora/charts/redis/templates/headless-svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: wkr-redis-headless
+  namespace: "default"
+  labels:
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/version: 8.2.0
+    helm.sh/chart: redis-22.0.1
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - name: tcp-redis
+      port: 6379
+      targetPort: redis
+  selector:
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/name: redis
+---
+# Source: weknora/charts/redis/templates/master/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: wkr-redis-master
+  namespace: "default"
+  labels:
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/version: 8.2.0
+    helm.sh/chart: redis-22.0.1
+    app.kubernetes.io/component: master
+spec:
+  type: ClusterIP
+  internalTrafficPolicy: Cluster
+  sessionAffinity: None
+  ports:
+    - name: tcp-redis
+      port: 6379
+      targetPort: redis
+      nodePort: null
+  selector:
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: master
+---
+# Source: weknora/charts/redis/templates/replicas/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: wkr-redis-replicas
+  namespace: "default"
+  labels:
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/version: 8.2.0
+    helm.sh/chart: redis-22.0.1
+    app.kubernetes.io/component: replica
+spec:
+  type: ClusterIP
+  internalTrafficPolicy: Cluster
+  sessionAffinity: None
+  ports:
+    - name: tcp-redis
+      port: 6379
+      targetPort: redis
+      nodePort: null
+  selector:
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: replica
+---
+# Source: weknora/templates/front-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: wkr-weknora-front
+  labels:
+    helm.sh/chart: weknora-0.1.0
+    app.kubernetes.io/name: weknora
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: front
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: weknora
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/component: front
+---
+# Source: weknora/templates/knora-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: wkr-weknora-knora
+  labels:
+    helm.sh/chart: weknora-0.1.0
+    app.kubernetes.io/name: weknora
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: knora
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: weknora
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/component: knora
+---
+# Source: weknora/templates/reader-service copy.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: wkr-weknora-reader
+  labels:
+    helm.sh/chart: weknora-0.1.0
+    app.kubernetes.io/name: weknora
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: reader
+spec:
+  type: ClusterIP
+  ports:
+    - port: 50051
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: weknora
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/component: reader
+---
+# Source: weknora/templates/front.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wkr-weknora-front
+  labels:
+    helm.sh/chart: weknora-0.1.0
+    app.kubernetes.io/name: weknora
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: front
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: weknora
+      app.kubernetes.io/instance: wkr
+      app.kubernetes.io/component: front
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: weknora-0.1.0
+        app.kubernetes.io/name: weknora
+        app.kubernetes.io/instance: wkr
+        app.kubernetes.io/version: "1.16.0"
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: front
+    spec:
+      serviceAccountName: wkr-weknora
+      securityContext:
+        fsGroup: 2000
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+        - name: front
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+                - NET_ADMIN
+                - NET_RAW
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+          image: ""
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 10m
+              memory: 64Mi
+---
+# Source: weknora/templates/reader.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wkr-weknora-reader
+  labels:
+    helm.sh/chart: weknora-0.1.0
+    app.kubernetes.io/name: weknora
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: reader
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: weknora
+      app.kubernetes.io/instance: wkr
+      app.kubernetes.io/component: reader
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: weknora-0.1.0
+        app.kubernetes.io/name: weknora
+        app.kubernetes.io/instance: wkr
+        app.kubernetes.io/version: "1.16.0"
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: reader
+    spec:
+      serviceAccountName: wkr-weknora
+      securityContext:
+        fsGroup: 2000
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+        - name: reader
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+                - NET_ADMIN
+                - NET_RAW
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+          image: ""
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 50051
+              protocol: TCP
+          livenessProbe:
+            tcpSocket:
+              port: http
+          readinessProbe:
+            tcpSocket:
+              port: http
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 10m
+              memory: 64Mi
+          env:
+            - name: COS_SECRET_ID
+              value: ""
+            - name: COS_SECRET_KEY
+              value: ""
+            - name: COS_REGION
+              value: ""
+            - name: COS_BUCKET_NAME
+              value: ""
+            - name: COS_APP_ID
+              value: ""
+            - name: COS_PATH_PREFIX
+              value: ""
+            - name: COS_ENABLE_OLD_DOMAIN
+              value: ""
+            - name: VLM_MODEL_BASE_URL
+              value: ""
+            - name: VLM_MODEL_NAME
+              value: ""
+            - name: VLM_MODEL_API_KEY
+              value: ""
+---
+# Source: weknora/charts/postgresql/templates/primary/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: wkr-postgresql
+  namespace: "default"
+  labels:
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: postgresql
+    app.kubernetes.io/version: 16.1.0
+    helm.sh/chart: postgresql-14.0.0
+    app.kubernetes.io/component: primary
+spec:
+  replicas: 1
+  serviceName: wkr-postgresql-hl
+  updateStrategy:
+    rollingUpdate: {}
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: wkr
+      app.kubernetes.io/name: postgresql
+      app.kubernetes.io/component: primary
+  template:
+    metadata:
+      name: wkr-postgresql
+      labels:
+        app.kubernetes.io/instance: wkr
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: postgresql
+        app.kubernetes.io/version: 16.1.0
+        helm.sh/chart: postgresql-14.0.0
+        app.kubernetes.io/component: primary
+    spec:
+      serviceAccountName: wkr-postgresql
+
+      automountServiceAccountToken: false
+      affinity:
+        podAffinity:
+
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/instance: wkr
+                    app.kubernetes.io/name: postgresql
+                    app.kubernetes.io/component: primary
+                topologyKey: kubernetes.io/hostname
+              weight: 1
+        nodeAffinity:
+
+      securityContext:
+        fsGroup: 1001
+        fsGroupChangePolicy: Always
+        supplementalGroups: []
+        sysctls: []
+      hostNetwork: false
+      hostIPC: false
+      containers:
+        - name: postgresql
+          image: docker.io/paradedb/paradedb@sha256:2dd523560e317024723962479e93367a67eefa263a0fc391be2489dba1016989
+          imagePullPolicy: "IfNotPresent"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: true
+            runAsUser: 1001
+            seccompProfile:
+              type: RuntimeDefault
+          env:
+            - name: BITNAMI_DEBUG
+              value: "false"
+            - name: POSTGRESQL_PORT_NUMBER
+              value: "5432"
+            - name: POSTGRESQL_VOLUME_DIR
+              value: "/bitnami/postgresql"
+            - name: PGDATA
+              value: "/bitnami/postgresql/data"
+            # Authentication
+            - name: POSTGRES_USER
+              value: "weknora"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: wkr-postgresql
+                  key: password
+            - name: POSTGRES_POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: wkr-postgresql
+                  key: postgres-password
+            - name: POSTGRES_DATABASE
+              value: "weknora"
+            # Replication
+            # Initdb
+            # Standby
+            # LDAP
+            - name: POSTGRESQL_ENABLE_LDAP
+              value: "no"
+            # TLS
+            - name: POSTGRESQL_ENABLE_TLS
+              value: "no"
+            # Audit
+            - name: POSTGRESQL_LOG_HOSTNAME
+              value: "false"
+            - name: POSTGRESQL_LOG_CONNECTIONS
+              value: "false"
+            - name: POSTGRESQL_LOG_DISCONNECTIONS
+              value: "false"
+            - name: POSTGRESQL_PGAUDIT_LOG_CATALOG
+              value: "off"
+            # Others
+            - name: POSTGRESQL_CLIENT_MIN_MESSAGES
+              value: "error"
+            - name: POSTGRESQL_SHARED_PRELOAD_LIBRARIES
+              value: "pgaudit"
+          ports:
+            - name: tcp-postgresql
+              containerPort: 5432
+          livenessProbe:
+            failureThreshold: 6
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - exec pg_isready -U "weknora" -d "dbname=weknora" -h 127.0.0.1 -p 5432
+          readinessProbe:
+            failureThreshold: 6
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - -e
+                - |
+                  exec pg_isready -U "weknora" -d "dbname=weknora" -h 127.0.0.1 -p 5432
+          resources:
+            limits: {}
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          volumeMounts:
+            - name: custom-init-scripts
+              mountPath: /docker-entrypoint-initdb.d/
+            - name: dshm
+              mountPath: /dev/shm
+            - name: data
+              mountPath: /bitnami/postgresql
+      volumes:
+        - name: custom-init-scripts
+          configMap:
+            name: postgresql-initdb-scripts
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 256Mi
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: data
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "8Gi"
+---
+# Source: weknora/charts/redis/templates/master/application.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: wkr-redis-master
+  namespace: "default"
+  labels:
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/version: 8.2.0
+    helm.sh/chart: redis-22.0.1
+    app.kubernetes.io/component: master
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: wkr
+      app.kubernetes.io/name: redis
+      app.kubernetes.io/component: master
+  serviceName: wkr-redis-headless
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: wkr
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: redis
+        app.kubernetes.io/version: 8.2.0
+        helm.sh/chart: redis-22.0.1
+        app.kubernetes.io/component: master
+      annotations:
+        checksum/configmap: 2a9ab4a5432825504d910f022638674ce88eaefe9f9f595ad8bc107377d104fb
+        checksum/health: aff24913d801436ea469d8d374b2ddb3ec4c43ee7ab24663d5f8ff1a1b6991a9
+        checksum/scripts: 4906e49c6c6d226344c1725c8cd31ed9199ec4b47a39d142913eb314daa6ae3e
+        checksum/secret: 93f119d73d746a630b7aa4e091dd44d55a7b54135a83344753a33415b26368ad
+    spec:
+      securityContext:
+        fsGroup: 1001
+        fsGroupChangePolicy: Always
+        supplementalGroups: []
+        sysctls: []
+      serviceAccountName: wkr-redis-master
+      automountServiceAccountToken: false
+      affinity:
+        podAffinity:
+
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/instance: wkr
+                    app.kubernetes.io/name: redis
+                    app.kubernetes.io/component: master
+                topologyKey: kubernetes.io/hostname
+              weight: 1
+        nodeAffinity:
+
+      enableServiceLinks: true
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: redis
+          image: docker.io/redis@sha256:7521abdff715d396aa482183942f3fe643344287c29ccb66eee16ac08a92190f
+          imagePullPolicy: "IfNotPresent"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+            seLinuxOptions: {}
+            seccompProfile:
+              type: RuntimeDefault
+          command:
+            - /bin/bash
+          args:
+            - -ec
+            - /opt/bitnami/scripts/start-scripts/start-master.sh
+          env:
+            - name: BITNAMI_DEBUG
+              value: "false"
+            - name: REDIS_REPLICATION_MODE
+              value: master
+            - name: ALLOW_EMPTY_PASSWORD
+              value: "no"
+            - name: REDIS_PASSWORD_FILE
+              value: "/opt/bitnami/redis/secrets/redis-password"
+            - name: REDIS_TLS_ENABLED
+              value: "no"
+            - name: REDIS_PORT
+              value: "6379"
+          ports:
+            - name: redis
+              containerPort: 6379
+          livenessProbe:
+            initialDelaySeconds: 20
+            periodSeconds: 5
+            # One second longer than command timeout should prevent generation of zombie processes.
+            timeoutSeconds: 6
+            successThreshold: 1
+            failureThreshold: 5
+            exec:
+              command:
+                - /bin/bash
+                - -ec
+                - "/health/ping_liveness_local.sh 5"
+          readinessProbe:
+            initialDelaySeconds: 20
+            periodSeconds: 5
+            timeoutSeconds: 2
+            successThreshold: 1
+            failureThreshold: 5
+            exec:
+              command:
+                - /bin/bash
+                - -ec
+                - "/health/ping_readiness_local.sh 1"
+          resources:
+            limits:
+              cpu: 150m
+              ephemeral-storage: 2Gi
+              memory: 192Mi
+            requests:
+              cpu: 100m
+              ephemeral-storage: 50Mi
+              memory: 128Mi
+          volumeMounts:
+            - name: start-scripts
+              mountPath: /opt/bitnami/scripts/start-scripts
+            - name: health
+              mountPath: /health
+            - name: redis-password
+              mountPath: /opt/bitnami/redis/secrets/
+            - name: redis-data
+              mountPath: /data
+            - name: config
+              mountPath: /opt/bitnami/redis/mounted-etc
+            - name: empty-dir
+              mountPath: /opt/bitnami/redis/etc/
+              subPath: app-conf-dir
+            - name: empty-dir
+              mountPath: /tmp
+              subPath: tmp-dir
+      volumes:
+        - name: start-scripts
+          configMap:
+            name: wkr-redis-scripts
+            defaultMode: 0755
+        - name: health
+          configMap:
+            name: wkr-redis-health
+            defaultMode: 0755
+        - name: redis-password
+
+          secret:
+            secretName: wkr-redis
+            items:
+              - key: redis-password
+                path: redis-password
+        - name: config
+          configMap:
+            name: wkr-redis-configuration
+        - name: empty-dir
+          emptyDir: {}
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: redis-data
+        labels:
+          app.kubernetes.io/instance: wkr
+          app.kubernetes.io/name: redis
+          app.kubernetes.io/component: master
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "8Gi"
+---
+# Source: weknora/charts/redis/templates/replicas/application.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: wkr-redis-replicas
+  namespace: "default"
+  labels:
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/version: 8.2.0
+    helm.sh/chart: redis-22.0.1
+    app.kubernetes.io/component: replica
+spec:
+  replicas: 3
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: wkr
+      app.kubernetes.io/name: redis
+      app.kubernetes.io/component: replica
+  serviceName: wkr-redis-headless
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: wkr
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: redis
+        app.kubernetes.io/version: 8.2.0
+        helm.sh/chart: redis-22.0.1
+        app.kubernetes.io/component: replica
+      annotations:
+        checksum/configmap: 2a9ab4a5432825504d910f022638674ce88eaefe9f9f595ad8bc107377d104fb
+        checksum/health: aff24913d801436ea469d8d374b2ddb3ec4c43ee7ab24663d5f8ff1a1b6991a9
+        checksum/scripts: 4906e49c6c6d226344c1725c8cd31ed9199ec4b47a39d142913eb314daa6ae3e
+        checksum/secret: 409b7fca7e48f6d9c6d76cc5b108ebab742f5a06b93ab011f96640c21ce6326c
+    spec:
+      securityContext:
+        fsGroup: 1001
+        fsGroupChangePolicy: Always
+        supplementalGroups: []
+        sysctls: []
+      serviceAccountName: wkr-redis-replica
+      automountServiceAccountToken: false
+      affinity:
+        podAffinity:
+
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/instance: wkr
+                    app.kubernetes.io/name: redis
+                    app.kubernetes.io/component: replica
+                topologyKey: kubernetes.io/hostname
+              weight: 1
+        nodeAffinity:
+
+      enableServiceLinks: true
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: redis
+          image: docker.io/redis@sha256:7521abdff715d396aa482183942f3fe643344287c29ccb66eee16ac08a92190f
+          imagePullPolicy: "IfNotPresent"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+            seLinuxOptions: {}
+            seccompProfile:
+              type: RuntimeDefault
+          command:
+            - /bin/bash
+          args:
+            - -ec
+            - /opt/bitnami/scripts/start-scripts/start-replica.sh
+          env:
+            - name: BITNAMI_DEBUG
+              value: "false"
+            - name: REDIS_REPLICATION_MODE
+              value: replica
+            - name: REDIS_MASTER_HOST
+              value: wkr-redis-master-0.wkr-redis-headless.default.svc.cluster.local
+            - name: REDIS_MASTER_PORT_NUMBER
+              value: "6379"
+            - name: ALLOW_EMPTY_PASSWORD
+              value: "no"
+            - name: REDIS_PASSWORD_FILE
+              value: "/opt/bitnami/redis/secrets/redis-password"
+            - name: REDIS_MASTER_PASSWORD_FILE
+              value: "/opt/bitnami/redis/secrets/redis-password"
+            - name: REDIS_TLS_ENABLED
+              value: "no"
+            - name: REDIS_PORT
+              value: "6379"
+          ports:
+            - name: redis
+              containerPort: 6379
+          startupProbe:
+            failureThreshold: 22
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+            tcpSocket:
+              port: redis
+          livenessProbe:
+            initialDelaySeconds: 20
+            periodSeconds: 5
+            timeoutSeconds: 6
+            successThreshold: 1
+            failureThreshold: 5
+            exec:
+              command:
+                - /bin/bash
+                - -ec
+                - "/health/ping_liveness_local_and_master.sh 5"
+          readinessProbe:
+            initialDelaySeconds: 20
+            periodSeconds: 5
+            timeoutSeconds: 2
+            successThreshold: 1
+            failureThreshold: 5
+            exec:
+              command:
+                - /bin/bash
+                - -ec
+                - "/health/ping_readiness_local_and_master.sh 1"
+          resources:
+            limits:
+              cpu: 150m
+              ephemeral-storage: 2Gi
+              memory: 192Mi
+            requests:
+              cpu: 100m
+              ephemeral-storage: 50Mi
+              memory: 128Mi
+          volumeMounts:
+            - name: start-scripts
+              mountPath: /opt/bitnami/scripts/start-scripts
+            - name: health
+              mountPath: /health
+            - name: redis-password
+              mountPath: /opt/bitnami/redis/secrets/
+            - name: redis-data
+              mountPath: /data
+            - name: config
+              mountPath: /opt/bitnami/redis/mounted-etc
+            - name: empty-dir
+              mountPath: /opt/bitnami/redis/etc
+              subPath: app-conf-dir
+            - name: empty-dir
+              mountPath: /tmp
+              subPath: tmp-dir
+      volumes:
+        - name: start-scripts
+          configMap:
+            name: wkr-redis-scripts
+            defaultMode: 0755
+        - name: health
+          configMap:
+            name: wkr-redis-health
+            defaultMode: 0755
+        - name: redis-password
+
+          secret:
+            secretName: wkr-redis
+            items:
+              - key: redis-password
+                path: redis-password
+        - name: config
+          configMap:
+            name: wkr-redis-configuration
+        - name: empty-dir
+          emptyDir: {}
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: redis-data
+        labels:
+          app.kubernetes.io/instance: wkr
+          app.kubernetes.io/name: redis
+          app.kubernetes.io/component: replica
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "8Gi"
+---
+# Source: weknora/templates/knora.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: wkr-weknora-knora
+  labels:
+    helm.sh/chart: weknora-0.1.0
+    app.kubernetes.io/name: weknora
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: knora
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: weknora
+      app.kubernetes.io/instance: wkr
+      app.kubernetes.io/component: knora
+  serviceName: wkr-weknora-knora
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: weknora-0.1.0
+        app.kubernetes.io/name: weknora
+        app.kubernetes.io/instance: wkr
+        app.kubernetes.io/version: "1.16.0"
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: knora
+    spec:
+      serviceAccountName: wkr-weknora
+      securityContext:
+        fsGroup: 2000
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+        - name: knora
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+                - NET_ADMIN
+                - NET_RAW
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+          image: ""
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              port: http
+          readinessProbe:
+            httpGet:
+              port: http
+          volumeMounts:
+            - name: weknora-config
+              mountPath: /app/config
+          env:
+            - name: GIN_MODE
+              value: ""
+            - name: DB_DRIVER
+              value: ""
+            - name: DB_HOST
+              value: ""
+            - name: DB_PORT
+              value: ""
+            - name: DB_USER
+              value: ""
+            - name: DB_PASSWORD
+              value: ""
+            - name: DB_NAME
+              value: ""
+            - name: TZ
+              value: "ia/Shanghai"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "jaeger:4317"
+            - name: OTEL_SERVICE_NAME
+              value: "WeKnora"
+            - name: OTEL_TRACES_EXPORTER
+              value: "otlp"
+            - name: OTEL_METRICS_EXPORTER
+              value: "none"
+            - name: OTEL_LOGS_EXPORTER
+              value: "none"
+            - name: OTEL_PROPAGATORS
+              value: "tracecontext,baggage"
+            - name: RETRIEVE_DRIVER
+              value: ""
+            - name: ELASTICSEARCH_ADDR
+              value: ""
+            - name: ELASTICSEARCH_USERNAME
+              value: ""
+            - name: ELASTICSEARCH_PASSWORD
+              value: ""
+            - name: ELASTICSEARCH_INDEX
+              value: ""
+            - name: DOCREADER_ADDR
+              value: "wkr-weknora-reader:%!s(float64=50051)"
+            - name: STORAGE_TYPE
+              value: ""
+            - name: LOCAL_STORAGE_BASE_DIR
+              value: ""
+            - name: MINIO_ENDPOINT
+              value: ""
+            - name: MINIO_ACCESS_KEY_ID
+              value: ""
+            - name: MINIO_SECRET_ACCESS_KEY
+              value: ""
+            - name: MINIO_BUCKET_NAME
+              value: ""
+            - name: OLLAMA_BASE_URL
+              value: ""
+            - name: STREAM_MANAGER_TYPE
+              value: ""
+            - name: REDIS_ADDR
+              value: ":"
+            - name: REDIS_PASSWORD
+              value: ""
+            - name: REDIS_DB
+              value: ""
+            - name: REDIS_PREFIX
+              value: ""
+            - name: ENABLE_GRAPH_RAG
+              value: ""
+            - name: TENANT_AES_KEY
+              value: ""
+            - name: INIT_LLM_MODEL_NAME
+              value: ""
+            - name: INIT_LLM_MODEL_BASE_URL
+              value: ""
+            - name: INIT_LLM_MODEL_API_KEY
+              value: ""
+            - name: INIT_EMBEDDING_MODEL_NAME
+              value: ""
+            - name: INIT_EMBEDDING_MODEL_BASE_URL
+              value: ""
+            - name: INIT_EMBEDDING_MODEL_API_KEY
+              value: ""
+            - name: INIT_EMBEDDING_MODEL_DIMENSION
+              value: ""
+            - name: INIT_EMBEDDING_MODEL_ID
+              value: ""
+            - name: INIT_RERANK_MODEL_NAME
+              value: ""
+            - name: INIT_RERANK_MODEL_BASE_URL
+              value: ""
+            - name: INIT_RERANK_MODEL_API_KEY
+              value: ""
+            - name: INIT_TEST_TENANT_ID
+              value: ""
+            - name: INIT_TEST_KNOWLEDGE_BASE_ID
+              value: ""
+      volumes:
+        - name: weknora-config
+          configMap:
+            name: weknora-config
+---
+# Source: weknora/templates/tests/test-connection.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "wkr-weknora-test-connection"
+  labels:
+    helm.sh/chart: weknora-0.1.0
+    app.kubernetes.io/name: weknora
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ["wget"]
+      args: ["wkr-weknora-front:80"]
+  restartPolicy: Never

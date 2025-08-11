@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "weknora.fullname" . }}-reader
+  labels:
+    {{- include "weknora.labels" . | nindent 4 }}
+    app.kubernetes.io/component: reader
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "weknora.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: reader
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "weknora.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        app.kubernetes.io/component: reader
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "weknora.serviceAccountName" . }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: reader
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.reader.image.repository }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.reader.service.port }}
+              protocol: TCP
+          {{- with .Values.reader.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}    
+          {{- with .Values.reader.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.reader.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+          - name: COS_SECRET_ID
+            value: {{ .Values.reader.env.COS_SECRET_ID | default "" | quote }}
+          - name: COS_SECRET_KEY
+            value: {{ .Values.reader.env.COS_SECRET_KEY | default "" | quote }}
+          - name: COS_REGION
+            value: {{ .Values.reader.env.COS_REGION | default "" | quote }}
+          - name: COS_BUCKET_NAME
+            value: {{ .Values.reader.env.COS_BUCKET_NAME | default "" | quote }}
+          - name: COS_APP_ID
+            value: {{ .Values.reader.env.COS_APP_ID | default "" | quote }}
+          - name: COS_PATH_PREFIX
+            value: {{ .Values.reader.env.COS_PATH_PREFIX | default "" | quote }}
+          - name: COS_ENABLE_OLD_DOMAIN
+            value: {{ .Values.reader.env.COS_ENABLE_OLD_DOMAIN | default "" | quote }}
+          - name: VLM_MODEL_BASE_URL
+            value: {{ .Values.reader.env.VLM_MODEL_BASE_URL | default "" | quote }}
+          - name: VLM_MODEL_NAME
+            value: {{ .Values.reader.env.VLM_MODEL_NAME | default "" | quote }}
+          - name: VLM_MODEL_API_KEY
+            value: {{ .Values.reader.env.VLM_MODEL_API_KEY | default "" | quote }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
