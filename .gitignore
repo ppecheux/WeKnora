@@ -7,6 +7,7 @@
 *_secret
 *.key
 *.crt
+docker_mirror_certs
 
 # IDE和编辑器文件
 .idea/
@@ -32,3 +33,13 @@ data/files/
 
 .python-version
 .venv/
+weknora/*.default.yaml
+weknora/*.schema.json
+weknora/charts/
+weknora/rendered.yaml
+weknora/rendered.yaml
+weknora/wkr.dot
+weknora/wkr.png
+weknora/wkr-skaffold.png
+proxy.sh
+skaffold-render.yaml
