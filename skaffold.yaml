@@ -1,0 +1,38 @@
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: weknora
+build:
+  artifacts:
+    - image: app
+      context: .
+      docker:
+        dockerfile: docker/Dockerfile.app
+    - image: docreader
+      context: .
+      docker:
+        dockerfile: docker/Dockerfile.docreader
+    - image: frontend
+      context: ./frontend
+      docker:
+        dockerfile: Dockerfile
+  local: {}
+
+deploy:
+  helm:
+    releases:
+      - name: weknora
+        namespace: weknora
+        createNamespace: true
+        upgradeOnChange: true
+        chartPath: weknora
+        valuesFiles:
+          - weknora/values.yaml
+        version: 0.1.0
+        setValueTemplates:
+          knora.image.repository: "{{.IMAGE_REPO_app}}"
+          knora.image.tag: "{{.IMAGE_TAG_app}}"
+          front.image.repository: "{{.IMAGE_REPO_frontend}}"
+          front.image.tag: "{{.IMAGE_TAG_frontend}}"
+          reader.image.repository: "{{.IMAGE_REPO_docreader}}"
+          reader.image.tag: "{{.IMAGE_TAG_docreader}}"

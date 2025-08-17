@@ -1,0 +1,6 @@
+# Ignore cache and certificate directories
+docker_mirror_cache/
+docker_mirror_certs/
+**/docker_mirror_cache/
+**/docker_mirror_certs/
+*.png

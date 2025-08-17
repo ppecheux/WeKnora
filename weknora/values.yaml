@@ -49,6 +49,7 @@ front:
 
   image:
     repository: ""
+    tag: ""
 
   livenessProbe:
     httpGet:
@@ -74,6 +75,7 @@ knora:
 
   image:
     repository: ""
+    tag: ""
 
   livenessProbe:
     httpGet:
@@ -147,6 +149,7 @@ reader:
 
   image:
     repository: ""
+    tag: ""
   # This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
   livenessProbe:
     tcpSocket:
@@ -211,6 +214,9 @@ postgresql:
     repository: paradedb/paradedb
     tag: "0.17.3"
     digest: sha256:2dd523560e317024723962479e93367a67eefa263a0fc391be2489dba1016989
+  global:
+    security:
+      allowInsecureImages: true
 redis:
   enabled: true
   image:

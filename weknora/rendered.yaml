@@ -42,7 +42,7 @@ spec:
     - ports:
         - port: 5432
 ---
-# Source: weknora/charts/postgresql/templates/read/networkpolicy.yaml .
+# Source: weknora/charts/postgresql/templates/read/networkpolicy.yaml
 kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
 metadata:
@@ -188,7 +188,7 @@ metadata:
     helm.sh/chart: postgresql-14.0.0
 type: Opaque
 data:
-  postgres-password: "dWdqYTl6SExvdg=="
+  postgres-password: "N0dudzBWVTdXeg=="
   password: "d2Vrbm9yYQ=="
   # We don't auto-generate LDAP password when it's not provided as we do for other passwords
 ---
@@ -206,7 +206,7 @@ metadata:
     helm.sh/chart: redis-22.0.1
 type: Opaque
 data:
-  redis-password: "aFdKMkRwQ29JbA=="
+  redis-password: "bFBUeEYyamplZA=="
 ---
 # Source: weknora/charts/redis/templates/configmap.yaml
 apiVersion: v1
@@ -402,7 +402,7 @@ data:
     server:
       port: 8080
       host: "0.0.0.0"
-
+    
     # 对话服务配置
     conversation:
       max_rounds: 5
@@ -415,32 +415,32 @@ data:
       fallback_response: "抱歉，我无法回答这个问题。"
       fallback_prompt: |
         你是一个专业、友好的AI助手。现在用户提出的问题超出了你的知识库范围，你需要生成一个礼貌且有帮助的回复。
-
+    
         ## 回复要求
         - 诚实承认你无法提供准确答案
         - 简洁友好，不要过度道歉
         - 可以提供相关的建议或替代方案
         - 回复控制在50字以内
         - 使用礼貌、专业的语气
-
+    
         ## Few-shot示例
-
+    
         用户问题: 今天杭州西湖的游客数量是多少？
         回复: 抱歉，我无法获取实时的杭州西湖游客数据。您可以通过杭州旅游官网或相关APP查询这一信息。
-
+    
         用户问题: 张教授的新论文发表了吗？
         回复: 我没有张教授的最新论文信息。建议您查询学术数据库或直接联系张教授获取最新动态。
-
+    
         用户问题: 我的银行卡号是多少？
         回复: 作为AI助手，我无法获取您的个人银行信息。请登录您的银行APP或联系银行客服获取相关信息。
-
+    
         ## 用户当前的问题是:
         {{.Query}}
       enable_rewrite: true
       enable_rerank: true
       rewrite_prompt_system: |
         你是一个专注于指代消解和省略补全的智能助手，你的任务是根据历史对话上下文，清晰识别用户问题中的代词并替换为明确的主语，同时补全省略的关键信息。
-
+    
         ## 改写目标
         请根据历史对话，对当前用户问题进行改写，目标是：
         - 进行指代消解，将"它"、"这个"、"那个"、"他"、"她"、"它们"、"他们"、"她们"等代词替换为明确的主语
@@ -449,46 +449,46 @@ data:
         - 改写后必须也是一个问题
         - 改写后的问题字数控制在30字以内
         - 仅输出改写后的问题，不要输出任何解释，更不要尝试回答该问题，后面有其他助手回去解答此问题
-
+    
         ## Few-shot示例
-
+    
         示例1:
         历史对话:
         用户: 微信支付有哪些功能？
         助手: 微信支付的主要功能包括转账、付款码、收款、信用卡还款等多种支付服务。
-
+    
         用户问题: 它的安全性
         改写后: 微信支付的安全性
-
+    
         示例2:
         历史对话:
         用户: 苹果手机电池不耐用怎么办？
         助手: 您可以通过降低屏幕亮度、关闭后台应用和定期更新系统来延长电池寿命。
-
+    
         用户问题: 这样会影响使用体验吗？
         改写后: 降低屏幕亮度和关闭后台应用是否影响使用体验
-
+    
         示例3:
         历史对话:
         用户: 如何制作红烧肉？
         助手: 红烧肉的制作需要先将肉块焯水，然后加入酱油、糖等调料慢炖。
-
+    
         用户问题: 需要炖多久？
         改写后: 红烧肉需要炖多久
-
+    
         示例4:
         历史对话:
         用户: 北京到上海的高铁票价是多少？
         助手: 北京到上海的高铁票价根据车次和座位类型不同，二等座约为553元，一等座约为933元。
-
+    
         用户问题: 时间呢？
         改写后: 北京到上海的高铁时长
-
+    
         示例5:
         历史对话:
         用户: 如何注册微信账号？
         助手: 注册微信账号需要下载微信APP，输入手机号，接收验证码，然后设置昵称和密码。
-
+    
         用户问题: 国外手机号可以吗？
         改写后: 国外手机号是否可以注册微信账号
       rewrite_prompt_user: |
@@ -499,83 +499,83 @@ data:
         助手的回答是：{{.Answer}}
         ------END------
         {{end}}
-
+    
         ## 需要改写的用户问题
         {{.Query}}
-
+    
         ## 改写后的问题
       keywords_extraction_prompt: |
         # 角色
         你是一个专业的关键词提取助手，你的任务是根据用户的问题，提取出最重要的关键词/短语。
-
+    
         # 要求
         - 总结用户的问题，并给出最重要的关键词/短语，关键词/短语的数量不超过5个
         - 使用逗号作为分隔符来分隔关键词/短语
         - 关键词/短语必须来自于用户的问题，不得虚构
         - 不要输出任何解释，直接输出关键词/短语，不要有任何前缀、解释或标点符号，不要尝试回答该问题，后面有其他助手会去搜索此问题
-
+    
         # 输出格式
         keyword1, keyword2, keyword3, keyword4, keyword5
-
+    
         # Examples
-
+    
         ## Example 1
         USER: 如何提高英语口语水平？
         ###############
         Output: 英语口语, 口语水平, 提高英语口语, 英语口语提升, 英语口语练习
-
+    
         ## Example 2
         USER: 最近上海有什么好玩的展览活动？
         ###############
         Output: 上海展览, 展览活动, 上海展览推荐, 展览活动推荐, 上海展览活动
-
+    
         ## Example 3
         USER: 苹果手机电池不耐用怎么解决？
         ###############
         Output: 苹果手机, 电池不耐用, 电池优化, 电池寿命, 电池保养
-
+    
         ## Example 4
         USER: Python的Logo长啥样？
         ###############
         Output: Python Logo
-
+    
         ## Example 5
         USER: 如何使用iPhone连接WiFi？
         ###############
         Output: iPhone, 连接WiFi, 使用iPhone连接WiFi
-
+    
         # Real Data
         USER: {{.Query}}
-
+    
       keywords_extraction_prompt_user: |
         Output:
-
+    
       generate_summary_prompt: |
         你是一个精准的文章总结专家。你的任务是提取并总结用户提供的文章或片段的核心内容。
-
+    
         ## 核心要求
         - 总结结果长度为50-100个字，根据内容复杂度灵活调整
         - 完全基于提供的文章内容生成总结，不添加任何未在文章中出现的信息
         - 确保总结包含文章的关键信息点和主要结论
         - 即使文章内容较复杂或专业，也必须尝试提取核心要点进行总结
         - 直接输出总结结果，不包含任何引言、前缀或解释
-
+    
         ## 格式与风格
         - 使用客观、中立的第三人称陈述语气
         - 使用清晰简洁的中文表达
         - 保持逻辑连贯性，确保句与句之间有合理过渡
         - 避免重复使用相同的表达方式或句式结构
-
+    
         ## 注意事项
         - 绝对不输出"无法生成"、"无法总结"、"内容不足"等拒绝回应的词语
         - 不要照抄或参考示例中的任何内容，确保总结完全基于用户提供的新文章
         - 对于任何文本都尽最大努力提取重点并总结，无论长度或复杂度
         
         ## 以下是用户给出的文章相关信息：
-
+    
       generate_session_title_prompt: |
         你是一个专业的会话标题生成助手，你的任务是为用户提问创建简洁、精准且具描述性的标题。
-
+    
         ## 格式要求
         - 标题长度必须在10个字以内
         - 标题应准确反映用户问题的核心主题
@@ -583,18 +583,18 @@ data:
         - 保持简洁明了，删除非必要词语
         - 不要使用"关于"、"如何"等冗余词语开头
         - 直接输出标题文本，不要有任何前缀、解释或标点符号
-
+    
         ## Few-shot示例
-
+    
         用户问题: 如何提高英语口语水平？
         标题: 英语口语提升
-
+    
         用户问题: 最近上海有什么好玩的展览活动？
         标题: 上海展览推荐
-
+    
         用户问题: 苹果手机电池不耐用怎么解决？
         标题: 苹果电池优化
-
+    
         ## 用户的问题是：
       summary:
         repeat_penalty: 1.0
@@ -614,7 +614,7 @@ data:
         context_template: |
           你是一个专业的智能信息检索助手，名为小微，犹如专业的高级秘书，依据检索到的信息回答用户问题。
           当用户提出问题时，助手只能基于给定的信息进行解答，不能利用任何先验知识。
-
+    
           ## 回答问题规则
           - 仅根据检索到的信息中的事实进行回复，不得运用任何先验知识，保持回应的客观性和准确性。
           - 复杂问题和答案的按Markdown分结构展示，总述部分不需要拆分
@@ -625,28 +625,28 @@ data:
           <think>
           </think>
           NO_MATCH
-
+    
           ## 输出限制
           - 以Markdown图文格式输出你的最终结果
           - 输出内容要保证简短且全面，条理清晰，信息明确，不重复。
-
+    
           ## 当前时间是：
           {{.CurrentTime}} {{.CurrentWeek}}
-
+    
           ## 检索到的信息如下：
           ------BEGIN------
           {{range .Contexts}}
           {{.}}
           {{end}}
           ------END------
-
+    
           ## 用户当前的问题是：
           {{.Query}}
       extract_entities_prompt: |
         ## 任务
         用户提供的文本中，提取所有符合以下实体类型的实体：
         EntityTypes: [Person, Organization, Location, Product, Event, Date, Work, Concept, Resource, Category, Operation]
-
+    
         ## 要求
         1. 提取结果必须以JSON数组格式输出
         2. 每个实体必须包含 title 和 type 字段，description 字段可选但强烈建议提供
@@ -656,7 +656,7 @@ data:
         6. 所有字段值不能包含HTML标签或其他代码
         7. 如果实体有歧义，需在description中说明具体指代
         8. 若没有找到任何实体，返回空数组 []
-
+    
         ## 实体提取规则
         - Person: 真实或虚构的人物，包括历史人物、现代人物、文学角色等
         - Organization: 公司、政府机构、团队、学校等组织实体
@@ -669,7 +669,7 @@ data:
         - Resource: 自然资源、信息资源、工具等
         - Category: 分类、类别、领域等
         - Operation: 操作、动作、方法、过程等
-
+    
         ## 提取步骤
         1. 仔细阅读文本，识别可能的实体
         2. 对每个识别到的实体，确定其最适合的实体类型（必须从EntityTypes中选择）
@@ -680,11 +680,11 @@ data:
         4. 验证每个实体的所有字段是否正确且格式化恰当
         5. 将所有实体对象合并为一个JSON数组
         6. 检查最终JSON是否有效并符合要求
-
+    
         ## 示例
         [输入]
         文本： 《红楼梦》，又名《石头记》，是清代作家曹雪芹创作的中国古典四大名著之一，被誉为中国封建社会的百科全书。该书前80回由曹雪芹所著，后40回一般认为是高鹗所续。小说以贾、史、王、薛四大家族的兴衰为背景，以贾宝玉、林黛玉和薛宝钗的爱情悲剧为主线，刻画了以贾宝玉和金陵十二钗为中心的正邪两赋、贤愚并出的高度复杂的人物群像。成书于乾隆年间（1743年前后），是中国文学史上现实主义的高峰，对后世影响深远。
-
+    
         [输出]
         [
           {
@@ -743,18 +743,18 @@ data:
             "description": "红楼梦被视为中国文学史中现实主义的高峰之作"
           }
         ]
-
+    
       extract_relationships_prompt: |
         ## 任务
         从用户提供的实体数组中，提取实体之间存在的明确关系，形成结构化的关系网络。
-
+    
         ## 要求
         1. 关系提取必须基于提供的文本内容，不得臆测不存在的关系
         2. 结果必须以JSON数组格式输出，每个关系为数组中的一个对象
         3. 每个关系对象必须包含 source, target, description 和 strength 字段
         4. 不要输出任何解释或额外内容，只输出JSON数组
         5. 若没有找到任何关系，返回空数组 []
-
+    
         ## 关系提取规则
         - 只有在文本中明确体现的关系才应被提取
         - 源实体(source)和目标实体(target)必须是实体数组中已有的实体
@@ -766,7 +766,7 @@ data:
           * 7分：明确但非直接的关系（如作品中的角色、组织中的成员）
           * 6分：间接关联且有明确联系（如同事关系、相似产品）
           * 5分：存在关联但较为松散（如同一领域的不同概念）
-
+    
         ## 提取步骤
         1. 仔细分析文本内容，确定哪些实体之间存在明确关系
         2. 只考虑文本中明确提及的关系，不要臆测
@@ -782,7 +782,7 @@ data:
            - 确保没有矛盾的关系（如A同时是B的父亲和兄弟）
            - 确保关系描述与关系强度匹配
         6. 将所有有效关系组织为JSON数组
-
+    
         ## 示例
         [输入]
         实体： [
@@ -842,9 +842,9 @@ data:
             "description": "红楼梦被视为中国文学史中现实主义的高峰之作"
           }
         ]
-
+    
         文本： 《红楼梦》，又名《石头记》，是清代作家曹雪芹创作的中国古典四大名著之一，被誉为中国封建社会的百科全书。该书前80回由曹雪芹所著，后40回一般认为是高鹗所续。小说以贾、史、王、薛四大家族的兴衰为背景，以贾宝玉、林黛玉和薛宝钗的爱情悲剧为主线，刻画了以贾宝玉和金陵十二钗为中心的正邪两赋、贤愚并出的高度复杂的人物群像。成书于乾隆年间（1743年前后），是中国文学史上现实主义的高峰，对后世影响深远。
-
+    
         [输出]
         [
           {
@@ -926,7 +926,7 @@ data:
             "strength": 6
           }
         ]
-
+    
     # 知识库配置
     knowledge_base:
       chunk_size: 512
@@ -948,8 +948,8 @@ data:
     CREATE EXTENSION IF NOT EXISTS vector;
     CREATE EXTENSION IF NOT EXISTS pg_trgm;
     CREATE EXTENSION IF NOT EXISTS pg_search;
-
-
+    
+    
     -- Create tenant table
     CREATE TABLE IF NOT EXISTS tenants (
         id SERIAL PRIMARY KEY,
@@ -965,14 +965,14 @@ data:
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         deleted_at TIMESTAMP WITH TIME ZONE
     );
-
+    
     -- Set the starting value for tenants id sequence
     ALTER SEQUENCE tenants_id_seq RESTART WITH 10000;
-
+    
     -- Add indexes
     CREATE INDEX IF NOT EXISTS idx_tenants_api_key ON tenants(api_key);
     CREATE INDEX IF NOT EXISTS idx_tenants_status ON tenants(status);
-
+    
     -- Create model table
     CREATE TABLE IF NOT EXISTS models (
         id VARCHAR(64) PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -988,11 +988,11 @@ data:
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         deleted_at TIMESTAMP WITH TIME ZONE
     );  
-
+    
     -- Add indexes for models
     CREATE INDEX IF NOT EXISTS idx_models_type ON models(type);
     CREATE INDEX IF NOT EXISTS idx_models_source ON models(source);
-
+    
     -- Create knowledge_base table
     CREATE TABLE IF NOT EXISTS knowledge_bases (
         id VARCHAR(36) PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -1011,10 +1011,10 @@ data:
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         deleted_at TIMESTAMP WITH TIME ZONE
     );
-
+    
     -- Add indexes for knowledge_bases
     CREATE INDEX IF NOT EXISTS idx_knowledge_bases_tenant_id ON knowledge_bases(tenant_id);
-
+    
     -- Create knowledge table
     CREATE TABLE IF NOT EXISTS knowledges (
         id VARCHAR(36) PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -1040,13 +1040,13 @@ data:
         error_message TEXT,
         deleted_at TIMESTAMP WITH TIME ZONE
     );
-
+    
     -- Add indexes for knowledge
     CREATE INDEX IF NOT EXISTS idx_knowledges_tenant_id ON knowledges(tenant_id);
     CREATE INDEX IF NOT EXISTS idx_knowledges_base_id ON knowledges(knowledge_base_id);
     CREATE INDEX IF NOT EXISTS idx_knowledges_parse_status ON knowledges(parse_status);
     CREATE INDEX IF NOT EXISTS idx_knowledges_enable_status ON knowledges(enable_status);
-
+    
     -- Create session table
     CREATE TABLE IF NOT EXISTS sessions (
         id VARCHAR(36) PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -1070,11 +1070,11 @@ data:
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         deleted_at TIMESTAMP WITH TIME ZONE
     );
-
+    
     -- Create Index for sessions
     CREATE INDEX IF NOT EXISTS idx_sessions_tenant_id ON sessions(tenant_id);
-
-
+    
+    
     -- Create message table
     CREATE TABLE IF NOT EXISTS messages (
         id VARCHAR(36) PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -1088,11 +1088,11 @@ data:
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         deleted_at TIMESTAMP WITH TIME ZONE
     );
-
+    
     -- Create Index for messages
     CREATE INDEX IF NOT EXISTS idx_messages_session_id ON messages(session_id); 
-
-
+    
+    
     CREATE TABLE IF NOT EXISTS chunks (
         id VARCHAR(36) PRIMARY KEY DEFAULT uuid_generate_v4(),
         tenant_id INTEGER NOT NULL,
@@ -1114,16 +1114,16 @@ data:
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         deleted_at TIMESTAMP WITH TIME ZONE
     );
-
+    
     CREATE INDEX IF NOT EXISTS idx_chunks_tenant_kg ON chunks(tenant_id, knowledge_id);
     CREATE INDEX IF NOT EXISTS idx_chunks_parent_id ON chunks(parent_chunk_id);
     CREATE INDEX IF NOT EXISTS idx_chunks_chunk_type ON chunks(chunk_type);
-
+    
     CREATE TABLE IF NOT EXISTS embeddings (
         id SERIAL PRIMARY KEY,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-
+    
         source_id VARCHAR(64) NOT NULL,
         source_type INTEGER NOT NULL,
         chunk_id VARCHAR(64),
@@ -1133,7 +1133,7 @@ data:
         dimension INTEGER NOT NULL,
         embedding halfvec
     );
-
+    
     CREATE UNIQUE INDEX IF NOT EXISTS embeddings_unique_source ON embeddings(source_id, source_type);
     CREATE INDEX IF NOT EXISTS embeddings_search_idx ON embeddings
     USING bm25 (id, knowledge_base_id, content, knowledge_id, chunk_id)
@@ -1150,25 +1150,25 @@ data:
   01-migrate-to-paradedb.sql: |
     -- 迁移脚本：从PostgreSQL迁移到ParadeDB
     -- 注意：在执行此脚本前，请确保已经备份了数据
-
+    
     -- 1. 导出数据（在PostgreSQL中执行）
     -- pg_dump -U postgres -h localhost -p 5432 -d your_database > backup.sql
-
+    
     -- 2. 导入数据（在ParadeDB中执行）
     -- psql -U postgres -h localhost -p 5432 -d your_database < backup.sql
-
+    
     -- 3. 验证数据
-
-
+    
+    
     -- Insert some sample data
     -- INSERT INTO tenants (id, name, description, status, api_key)
     -- VALUES 
     --     (1, 'Demo Tenant', 'This is a demo tenant for testing', 'active', 'sk-00000001abcdefg123456')
     -- ON CONFLICT DO NOTHING;
-
+    
     -- SELECT setval('tenants_id_seq', (SELECT MAX(id) FROM tenants));
-
-
+    
+    
     -- -- Create knowledge base
     -- INSERT INTO knowledge_bases (id, name, description, tenant_id, chunking_config, image_processing_config, embedding_model_id)
     -- VALUES 
@@ -1176,16 +1176,16 @@ data:
     --     ('kb-00000002', 'Test Knowledge Base', 'Test knowledge base for development', 1, '{"chunk_size": 512, "chunk_overlap": 50, "separators": ["\n\n", "\n", "。"], "keep_separator": true}', '{"enable_multimodal": false, "model_id": ""}', 'model-embedding-00000001'),
     --     ('kb-00000003', 'Test Knowledge Base 2', 'Test knowledge base for development 2', 1, '{"chunk_size": 512, "chunk_overlap": 50, "separators": ["\n\n", "\n", "。"], "keep_separator": true}', '{"enable_multimodal": false, "model_id": ""}', 'model-embedding-00000001')
     -- ON CONFLICT DO NOTHING;
-
-
+    
+    
     SELECT COUNT(*) FROM tenants;
     SELECT COUNT(*) FROM models;
     SELECT COUNT(*) FROM knowledge_bases;
     SELECT COUNT(*) FROM knowledges;
-
-
+    
+    
     -- 测试中文全文搜索
-
+    
     -- 创建文档表
     CREATE TABLE chinese_documents (
         id SERIAL PRIMARY KEY,
@@ -1193,7 +1193,7 @@ data:
         content TEXT,
         published_date DATE
     );
-
+    
     -- 在表上创建 BM25 索引，使用结巴分词器支持中文
     CREATE INDEX idx_documents_bm25 ON chinese_documents
     USING bm25 (id, content)
@@ -1205,7 +1205,7 @@ data:
             }
         }'
     );
-
+    
     INSERT INTO chinese_documents (title, content, published_date)
     VALUES 
     ('人工智能的发展', '人工智能技术正在快速发展，影响了我们生活的方方面面。大语言模型是最近的一个重要突破。', '2023-01-15'),
@@ -1213,7 +1213,7 @@ data:
     ('深度学习应用', '深度学习在图像识别、自然语言处理和语音识别等领域有广泛应用。', '2023-03-10'),
     ('自然语言处理技术', '自然语言处理允许计算机理解、解释和生成人类语言，是人工智能的核心技术之一。', '2023-04-05'),
     ('计算机视觉入门', '计算机视觉让机器能够"看到"并理解视觉世界，广泛应用于安防、医疗等领域。', '2023-05-12');
-
+    
     INSERT INTO chinese_documents (title, content, published_date)
     VALUES 
     ('hello world', 'hello world', '2023-05-12');
@@ -1441,13 +1441,13 @@ spec:
             allowPrivilegeEscalation: false
             capabilities:
               drop:
-                - ALL
-                - NET_ADMIN
-                - NET_RAW
+              - ALL
+              - NET_ADMIN
+              - NET_RAW
             readOnlyRootFilesystem: true
             runAsNonRoot: true
             runAsUser: 1000
-          image: ""
+          image: ":latest"
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -1509,13 +1509,13 @@ spec:
             allowPrivilegeEscalation: false
             capabilities:
               drop:
-                - ALL
-                - NET_ADMIN
-                - NET_RAW
+              - ALL
+              - NET_ADMIN
+              - NET_RAW
             readOnlyRootFilesystem: true
             runAsNonRoot: true
             runAsUser: 1000
-          image: ""
+          image: ":latest"
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -1535,26 +1535,26 @@ spec:
               cpu: 10m
               memory: 64Mi
           env:
-            - name: COS_SECRET_ID
-              value: ""
-            - name: COS_SECRET_KEY
-              value: ""
-            - name: COS_REGION
-              value: ""
-            - name: COS_BUCKET_NAME
-              value: ""
-            - name: COS_APP_ID
-              value: ""
-            - name: COS_PATH_PREFIX
-              value: ""
-            - name: COS_ENABLE_OLD_DOMAIN
-              value: ""
-            - name: VLM_MODEL_BASE_URL
-              value: ""
-            - name: VLM_MODEL_NAME
-              value: ""
-            - name: VLM_MODEL_API_KEY
-              value: ""
+          - name: COS_SECRET_ID
+            value: ""
+          - name: COS_SECRET_KEY
+            value: ""
+          - name: COS_REGION
+            value: ""
+          - name: COS_BUCKET_NAME
+            value: ""
+          - name: COS_APP_ID
+            value: ""
+          - name: COS_PATH_PREFIX
+            value: ""
+          - name: COS_ENABLE_OLD_DOMAIN
+            value: ""
+          - name: VLM_MODEL_BASE_URL
+            value: ""
+          - name: VLM_MODEL_NAME
+            value: ""
+          - name: VLM_MODEL_API_KEY
+            value: ""
 ---
 # Source: weknora/charts/postgresql/templates/primary/statefulset.yaml
 apiVersion: apps/v1
@@ -1592,11 +1592,11 @@ spec:
         app.kubernetes.io/component: primary
     spec:
       serviceAccountName: wkr-postgresql
-
+      
       automountServiceAccountToken: false
       affinity:
         podAffinity:
-
+          
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
             - podAffinityTerm:
@@ -1608,7 +1608,7 @@ spec:
                 topologyKey: kubernetes.io/hostname
               weight: 1
         nodeAffinity:
-
+          
       securityContext:
         fsGroup: 1001
         fsGroupChangePolicy: Always
@@ -1624,7 +1624,7 @@ spec:
             allowPrivilegeEscalation: false
             capabilities:
               drop:
-                - ALL
+              - ALL
             privileged: false
             readOnlyRootFilesystem: false
             runAsNonRoot: true
@@ -1774,8 +1774,9 @@ spec:
         checksum/configmap: 2a9ab4a5432825504d910f022638674ce88eaefe9f9f595ad8bc107377d104fb
         checksum/health: aff24913d801436ea469d8d374b2ddb3ec4c43ee7ab24663d5f8ff1a1b6991a9
         checksum/scripts: 0717e77fd3bb941f602860e9be4f2ed87b481cddeadf37be463f8512ecde0c3e
-        checksum/secret: cad89bfe81bd29a37eb305844d25ba5788123ae5273b470560422e73e33ceb23
+        checksum/secret: c0460bf40d8d58ad62d59baf3ff3e4f6db480169f326fa65de0e19d5d1074a0f
     spec:
+      
       securityContext:
         fsGroup: 1001
         fsGroupChangePolicy: Always
@@ -1785,7 +1786,7 @@ spec:
       automountServiceAccountToken: false
       affinity:
         podAffinity:
-
+          
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
             - podAffinityTerm:
@@ -1797,7 +1798,7 @@ spec:
                 topologyKey: kubernetes.io/hostname
               weight: 1
         nodeAffinity:
-
+          
       enableServiceLinks: true
       terminationGracePeriodSeconds: 30
       containers:
@@ -1808,7 +1809,7 @@ spec:
             allowPrivilegeEscalation: false
             capabilities:
               drop:
-                - ALL
+              - ALL
             readOnlyRootFilesystem: true
             runAsGroup: 1001
             runAsNonRoot: true
@@ -1896,12 +1897,12 @@ spec:
             name: wkr-redis-health
             defaultMode: 0755
         - name: redis-password
-
+          
           secret:
             secretName: wkr-redis
             items:
-              - key: redis-password
-                path: redis-password
+            - key: redis-password
+              path: redis-password
         - name: config
           configMap:
             name: wkr-redis-configuration
@@ -1964,13 +1965,13 @@ spec:
             allowPrivilegeEscalation: false
             capabilities:
               drop:
-                - ALL
-                - NET_ADMIN
-                - NET_RAW
+              - ALL
+              - NET_ADMIN
+              - NET_RAW
             readOnlyRootFilesystem: true
             runAsNonRoot: true
             runAsUser: 1000
-          image: ""
+          image: ":latest"
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -2119,7 +2120,7 @@ metadata:
 spec:
   containers:
     - name: wget
-      image: busybox
-      command: ["wget"]
-      args: ["wkr-weknora-front:80"]
+      image: busybox:1.37@sha256:ab33eacc8251e3807b85bb6dba570e4698c3998eca6f0fc2ccb60575a563ea74
+      command: ['wget']
+      args: ['wkr-weknora-front:80']
   restartPolicy: Never
