@@ -43,3 +43,7 @@ weknora/wkr.png
 weknora/wkr-skaffold.png
 proxy.sh
 skaffold-render.yaml
+
+### macOS
+# General
+.DS_Store
