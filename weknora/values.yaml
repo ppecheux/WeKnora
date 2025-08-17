@@ -217,3 +217,8 @@ redis:
     repository: redis
     tag: alpine3.22
     digest: sha256:7521abdff715d396aa482183942f3fe643344287c29ccb66eee16ac08a92190f
+  master:
+    service:
+      ports:
+        redis: 6379
+  architecture: "standalone"

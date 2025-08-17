@@ -1,6 +1,11 @@
 kind: ConfigMap
+apiVersion: v1
 metadata:
   name: weknora-config
+  labels:
+    {{- include "weknora.labels" . | nindent 4 }}
+    app.kubernetes.io/component: knora
+    app.kubernetes.io/part-of: weknora
 data:
   weknora.conf: |
     {{- .Files.Get "config/config.yaml" | nindent 4 }}

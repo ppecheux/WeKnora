@@ -42,7 +42,7 @@ spec:
     - ports:
         - port: 5432
 ---
-# Source: weknora/charts/postgresql/templates/read/networkpolicy.yaml
+# Source: weknora/charts/postgresql/templates/read/networkpolicy.yaml .
 kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
 metadata:
@@ -133,27 +133,6 @@ spec:
       app.kubernetes.io/name: redis
       app.kubernetes.io/component: master
 ---
-# Source: weknora/charts/redis/templates/replicas/pdb.yaml
-apiVersion: policy/v1
-kind: PodDisruptionBudget
-metadata:
-  name: wkr-redis-replicas
-  namespace: "default"
-  labels:
-    app.kubernetes.io/instance: wkr
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: redis
-    app.kubernetes.io/version: 8.2.0
-    helm.sh/chart: redis-22.0.1
-    app.kubernetes.io/component: replica
-spec:
-  maxUnavailable: 1
-  selector:
-    matchLabels:
-      app.kubernetes.io/instance: wkr
-      app.kubernetes.io/name: redis
-      app.kubernetes.io/component: replica
----
 # Source: weknora/charts/postgresql/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -174,20 +153,6 @@ kind: ServiceAccount
 automountServiceAccountToken: false
 metadata:
   name: wkr-redis-master
-  namespace: "default"
-  labels:
-    app.kubernetes.io/instance: wkr
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: redis
-    app.kubernetes.io/version: 8.2.0
-    helm.sh/chart: redis-22.0.1
----
-# Source: weknora/charts/redis/templates/replicas/serviceaccount.yaml
-apiVersion: v1
-kind: ServiceAccount
-automountServiceAccountToken: false
-metadata:
-  name: wkr-redis-replica
   namespace: "default"
   labels:
     app.kubernetes.io/instance: wkr
@@ -223,7 +188,7 @@ metadata:
     helm.sh/chart: postgresql-14.0.0
 type: Opaque
 data:
-  postgres-password: "ZlBaQVVZZGRZbg=="
+  postgres-password: "dWdqYTl6SExvdg=="
   password: "d2Vrbm9yYQ=="
   # We don't auto-generate LDAP password when it's not provided as we do for other passwords
 ---
@@ -241,7 +206,7 @@ metadata:
     helm.sh/chart: redis-22.0.1
 type: Opaque
 data:
-  redis-password: "VDNuSmVDU04zbg=="
+  redis-password: "aFdKMkRwQ29JbA=="
 ---
 # Source: weknora/charts/redis/templates/configmap.yaml
 apiVersion: v1
@@ -417,66 +382,20 @@ data:
     ARGS+=("--include" "/opt/bitnami/redis/etc/redis.conf")
     ARGS+=("--include" "/opt/bitnami/redis/etc/master.conf")
     exec redis-server "${ARGS[@]}"
-  start-replica.sh: |
-    #!/bin/bash
-
-    get_port() {
-        hostname="$1"
-        type="$2"
-
-        port_var=$(echo "${hostname^^}_SERVICE_PORT_$type" | sed "s/-/_/g")
-        port=${!port_var}
-
-        if [ -z "$port" ]; then
-            case $type in
-                "SENTINEL")
-                    echo 26379
-                    ;;
-                "REDIS")
-                    echo 6379
-                    ;;
-            esac
-        else
-            echo $port
-        fi
-    }
-
-    get_full_hostname() {
-        hostname="$1"
-        full_hostname="${hostname}.${HEADLESS_SERVICE}"
-        echo "${full_hostname}"
-    }
-
-    REDISPORT=$(get_port "$HOSTNAME" "REDIS")
-    HEADLESS_SERVICE="wkr-redis-headless.default.svc.cluster.local"
-
-    [[ -f $REDIS_PASSWORD_FILE ]] && export REDIS_PASSWORD="$(< "${REDIS_PASSWORD_FILE}")"
-    [[ -f $REDIS_MASTER_PASSWORD_FILE ]] && export REDIS_MASTER_PASSWORD="$(< "${REDIS_MASTER_PASSWORD_FILE}")"
-    if [[ -f /opt/bitnami/redis/mounted-etc/replica.conf ]];then
-        cp /opt/bitnami/redis/mounted-etc/replica.conf /opt/bitnami/redis/etc/replica.conf
-    fi
-    if [[ -f /opt/bitnami/redis/mounted-etc/redis.conf ]];then
-        cp /opt/bitnami/redis/mounted-etc/redis.conf /opt/bitnami/redis/etc/redis.conf
-    fi
-    if [[ -f /opt/bitnami/redis/mounted-etc/users.acl ]];then
-        cp /opt/bitnami/redis/mounted-etc/users.acl /opt/bitnami/redis/etc/users.acl
-    fi
-
-    echo "" >> /opt/bitnami/redis/etc/replica.conf
-    echo "replica-announce-port $REDISPORT" >> /opt/bitnami/redis/etc/replica.conf
-    echo "replica-announce-ip $(get_full_hostname "$HOSTNAME")" >> /opt/bitnami/redis/etc/replica.conf
-    ARGS=("--port" "${REDIS_PORT}")
-    ARGS+=("--replicaof" "${REDIS_MASTER_HOST}" "${REDIS_MASTER_PORT_NUMBER}")
-    ARGS+=("--requirepass" "${REDIS_PASSWORD}")
-    ARGS+=("--masterauth" "${REDIS_MASTER_PASSWORD}")
-    ARGS+=("--include" "/opt/bitnami/redis/etc/redis.conf")
-    ARGS+=("--include" "/opt/bitnami/redis/etc/replica.conf")
-    exec redis-server "${ARGS[@]}"
 ---
 # Source: weknora/templates/knora-config.yaml
 kind: ConfigMap
+apiVersion: v1
 metadata:
   name: weknora-config
+  labels:
+    helm.sh/chart: weknora-0.1.0
+    app.kubernetes.io/name: weknora
+    app.kubernetes.io/instance: wkr
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: knora
+    app.kubernetes.io/part-of: weknora
 data:
   weknora.conf: |
     # 服务器配置
@@ -522,12 +441,12 @@ data:
       rewrite_prompt_system: |
         你是一个专注于指代消解和省略补全的智能助手，你的任务是根据历史对话上下文，清晰识别用户问题中的代词并替换为明确的主语，同时补全省略的关键信息。
 
+        ## 改写目标
         请根据历史对话，对当前用户问题进行改写，目标是：
         - 进行指代消解，将"它"、"这个"、"那个"、"他"、"她"、"它们"、"他们"、"她们"等代词替换为明确的主语
         - 补全省略的关键信息，确保问题语义完整
         - 保持问题的原始含义和表达方式不变
         - 改写后必须也是一个问题
-        ## 改写目标
         - 改写后的问题字数控制在30字以内
         - 仅输出改写后的问题，不要输出任何解释，更不要尝试回答该问题，后面有其他助手回去解答此问题
 
@@ -1410,33 +1329,6 @@ spec:
     app.kubernetes.io/name: redis
     app.kubernetes.io/component: master
 ---
-# Source: weknora/charts/redis/templates/replicas/service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: wkr-redis-replicas
-  namespace: "default"
-  labels:
-    app.kubernetes.io/instance: wkr
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: redis
-    app.kubernetes.io/version: 8.2.0
-    helm.sh/chart: redis-22.0.1
-    app.kubernetes.io/component: replica
-spec:
-  type: ClusterIP
-  internalTrafficPolicy: Cluster
-  sessionAffinity: None
-  ports:
-    - name: tcp-redis
-      port: 6379
-      targetPort: redis
-      nodePort: null
-  selector:
-    app.kubernetes.io/instance: wkr
-    app.kubernetes.io/name: redis
-    app.kubernetes.io/component: replica
----
 # Source: weknora/templates/front-service.yaml
 apiVersion: v1
 kind: Service
@@ -1881,8 +1773,8 @@ spec:
       annotations:
         checksum/configmap: 2a9ab4a5432825504d910f022638674ce88eaefe9f9f595ad8bc107377d104fb
         checksum/health: aff24913d801436ea469d8d374b2ddb3ec4c43ee7ab24663d5f8ff1a1b6991a9
-        checksum/scripts: 4906e49c6c6d226344c1725c8cd31ed9199ec4b47a39d142913eb314daa6ae3e
-        checksum/secret: 93f119d73d746a630b7aa4e091dd44d55a7b54135a83344753a33415b26368ad
+        checksum/scripts: 0717e77fd3bb941f602860e9be4f2ed87b481cddeadf37be463f8512ecde0c3e
+        checksum/secret: cad89bfe81bd29a37eb305844d25ba5788123ae5273b470560422e73e33ceb23
     spec:
       securityContext:
         fsGroup: 1001
@@ -2031,205 +1923,6 @@ spec:
           requests:
             storage: "8Gi"
 ---
-# Source: weknora/charts/redis/templates/replicas/application.yaml
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: wkr-redis-replicas
-  namespace: "default"
-  labels:
-    app.kubernetes.io/instance: wkr
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: redis
-    app.kubernetes.io/version: 8.2.0
-    helm.sh/chart: redis-22.0.1
-    app.kubernetes.io/component: replica
-spec:
-  replicas: 3
-  revisionHistoryLimit: 10
-  selector:
-    matchLabels:
-      app.kubernetes.io/instance: wkr
-      app.kubernetes.io/name: redis
-      app.kubernetes.io/component: replica
-  serviceName: wkr-redis-headless
-  updateStrategy:
-    type: RollingUpdate
-  template:
-    metadata:
-      labels:
-        app.kubernetes.io/instance: wkr
-        app.kubernetes.io/managed-by: Helm
-        app.kubernetes.io/name: redis
-        app.kubernetes.io/version: 8.2.0
-        helm.sh/chart: redis-22.0.1
-        app.kubernetes.io/component: replica
-      annotations:
-        checksum/configmap: 2a9ab4a5432825504d910f022638674ce88eaefe9f9f595ad8bc107377d104fb
-        checksum/health: aff24913d801436ea469d8d374b2ddb3ec4c43ee7ab24663d5f8ff1a1b6991a9
-        checksum/scripts: 4906e49c6c6d226344c1725c8cd31ed9199ec4b47a39d142913eb314daa6ae3e
-        checksum/secret: 409b7fca7e48f6d9c6d76cc5b108ebab742f5a06b93ab011f96640c21ce6326c
-    spec:
-      securityContext:
-        fsGroup: 1001
-        fsGroupChangePolicy: Always
-        supplementalGroups: []
-        sysctls: []
-      serviceAccountName: wkr-redis-replica
-      automountServiceAccountToken: false
-      affinity:
-        podAffinity:
-
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - podAffinityTerm:
-                labelSelector:
-                  matchLabels:
-                    app.kubernetes.io/instance: wkr
-                    app.kubernetes.io/name: redis
-                    app.kubernetes.io/component: replica
-                topologyKey: kubernetes.io/hostname
-              weight: 1
-        nodeAffinity:
-
-      enableServiceLinks: true
-      terminationGracePeriodSeconds: 30
-      containers:
-        - name: redis
-          image: docker.io/redis@sha256:7521abdff715d396aa482183942f3fe643344287c29ccb66eee16ac08a92190f
-          imagePullPolicy: "IfNotPresent"
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - ALL
-            readOnlyRootFilesystem: true
-            runAsGroup: 1001
-            runAsNonRoot: true
-            runAsUser: 1001
-            seLinuxOptions: {}
-            seccompProfile:
-              type: RuntimeDefault
-          command:
-            - /bin/bash
-          args:
-            - -ec
-            - /opt/bitnami/scripts/start-scripts/start-replica.sh
-          env:
-            - name: BITNAMI_DEBUG
-              value: "false"
-            - name: REDIS_REPLICATION_MODE
-              value: replica
-            - name: REDIS_MASTER_HOST
-              value: wkr-redis-master-0.wkr-redis-headless.default.svc.cluster.local
-            - name: REDIS_MASTER_PORT_NUMBER
-              value: "6379"
-            - name: ALLOW_EMPTY_PASSWORD
-              value: "no"
-            - name: REDIS_PASSWORD_FILE
-              value: "/opt/bitnami/redis/secrets/redis-password"
-            - name: REDIS_MASTER_PASSWORD_FILE
-              value: "/opt/bitnami/redis/secrets/redis-password"
-            - name: REDIS_TLS_ENABLED
-              value: "no"
-            - name: REDIS_PORT
-              value: "6379"
-          ports:
-            - name: redis
-              containerPort: 6379
-          startupProbe:
-            failureThreshold: 22
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 5
-            tcpSocket:
-              port: redis
-          livenessProbe:
-            initialDelaySeconds: 20
-            periodSeconds: 5
-            timeoutSeconds: 6
-            successThreshold: 1
-            failureThreshold: 5
-            exec:
-              command:
-                - /bin/bash
-                - -ec
-                - "/health/ping_liveness_local_and_master.sh 5"
-          readinessProbe:
-            initialDelaySeconds: 20
-            periodSeconds: 5
-            timeoutSeconds: 2
-            successThreshold: 1
-            failureThreshold: 5
-            exec:
-              command:
-                - /bin/bash
-                - -ec
-                - "/health/ping_readiness_local_and_master.sh 1"
-          resources:
-            limits:
-              cpu: 150m
-              ephemeral-storage: 2Gi
-              memory: 192Mi
-            requests:
-              cpu: 100m
-              ephemeral-storage: 50Mi
-              memory: 128Mi
-          volumeMounts:
-            - name: start-scripts
-              mountPath: /opt/bitnami/scripts/start-scripts
-            - name: health
-              mountPath: /health
-            - name: redis-password
-              mountPath: /opt/bitnami/redis/secrets/
-            - name: redis-data
-              mountPath: /data
-            - name: config
-              mountPath: /opt/bitnami/redis/mounted-etc
-            - name: empty-dir
-              mountPath: /opt/bitnami/redis/etc
-              subPath: app-conf-dir
-            - name: empty-dir
-              mountPath: /tmp
-              subPath: tmp-dir
-      volumes:
-        - name: start-scripts
-          configMap:
-            name: wkr-redis-scripts
-            defaultMode: 0755
-        - name: health
-          configMap:
-            name: wkr-redis-health
-            defaultMode: 0755
-        - name: redis-password
-
-          secret:
-            secretName: wkr-redis
-            items:
-              - key: redis-password
-                path: redis-password
-        - name: config
-          configMap:
-            name: wkr-redis-configuration
-        - name: empty-dir
-          emptyDir: {}
-  volumeClaimTemplates:
-    - apiVersion: v1
-      kind: PersistentVolumeClaim
-      metadata:
-        name: redis-data
-        labels:
-          app.kubernetes.io/instance: wkr
-          app.kubernetes.io/name: redis
-          app.kubernetes.io/component: replica
-      spec:
-        accessModes:
-          - "ReadWriteOnce"
-        resources:
-          requests:
-            storage: "8Gi"
----
 # Source: weknora/templates/knora.yaml
 apiVersion: apps/v1
 kind: StatefulSet
@@ -2289,32 +1982,41 @@ spec:
           readinessProbe:
             httpGet:
               port: http
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 10m
+              memory: 64Mi
           volumeMounts:
             - name: weknora-config
               mountPath: /app/config
+            - name: data-files
+              mountPath: /data/files
           env:
             - name: GIN_MODE
-              value: ""
+              value: "release"
             - name: DB_DRIVER
-              value: ""
+              value: "postgres"
             - name: DB_HOST
-              value: ""
+              value: wkr-weknora-postgresql-hl
             - name: DB_PORT
-              value: ""
+              value: "5432"
             - name: DB_USER
-              value: ""
+              value: "weknora"
             - name: DB_PASSWORD
-              value: ""
+              value: "weknora"
             - name: DB_NAME
-              value: ""
+              value: "weknora"
             - name: TZ
               value: "ia/Shanghai"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: "jaeger:4317"
+              value: ""
             - name: OTEL_SERVICE_NAME
               value: "WeKnora"
             - name: OTEL_TRACES_EXPORTER
-              value: "otlp"
+              value: "none"
             - name: OTEL_METRICS_EXPORTER
               value: "none"
             - name: OTEL_LOGS_EXPORTER
@@ -2322,7 +2024,7 @@ spec:
             - name: OTEL_PROPAGATORS
               value: "tracecontext,baggage"
             - name: RETRIEVE_DRIVER
-              value: ""
+              value: "postgres"
             - name: ELASTICSEARCH_ADDR
               value: ""
             - name: ELASTICSEARCH_USERNAME
@@ -2334,9 +2036,9 @@ spec:
             - name: DOCREADER_ADDR
               value: "wkr-weknora-reader:%!s(float64=50051)"
             - name: STORAGE_TYPE
-              value: ""
+              value: "local"
             - name: LOCAL_STORAGE_BASE_DIR
-              value: ""
+              value: "/data/files"
             - name: MINIO_ENDPOINT
               value: ""
             - name: MINIO_ACCESS_KEY_ID
@@ -2348,19 +2050,23 @@ spec:
             - name: OLLAMA_BASE_URL
               value: ""
             - name: STREAM_MANAGER_TYPE
-              value: ""
+              value: "redis"
             - name: REDIS_ADDR
-              value: ":"
+              value: "wkr-weknora-redis-headless:%!s(float64=6379)"
+            - name: REDIS_HOST
+              value: "wkr-weknora-redis-headless"
+            - name: REDIS_PORT
+              value: "6379"
             - name: REDIS_PASSWORD
               value: ""
             - name: REDIS_DB
-              value: ""
+              value: "0"
             - name: REDIS_PREFIX
-              value: ""
+              value: "stream:"
             - name: ENABLE_GRAPH_RAG
-              value: ""
+              value: "false"
             - name: TENANT_AES_KEY
-              value: ""
+              value: "weknorarag-api-key-secret-secret"
             - name: INIT_LLM_MODEL_NAME
               value: ""
             - name: INIT_LLM_MODEL_BASE_URL
@@ -2387,10 +2093,15 @@ spec:
               value: ""
             - name: INIT_TEST_KNOWLEDGE_BASE_ID
               value: ""
+            - name: COS_ENABLE_OLD_DOMAIN
+              value: "true"
       volumes:
         - name: weknora-config
           configMap:
             name: weknora-config
+        - name: data-files
+          emptyDir:
+            sizeLimit: 1Gi
 ---
 # Source: weknora/templates/tests/test-connection.yaml
 apiVersion: v1

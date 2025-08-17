@@ -61,29 +61,31 @@ spec:
           volumeMounts:
             - name: weknora-config
               mountPath: /app/config
+            - name: data-files
+              mountPath: /data/files
           env:
             - name: GIN_MODE
-              value: {{ .Values.knora.env.GIN_MODE | default "" | quote }}
+              value: {{ .Values.knora.env.GIN_MODE | default "release" | quote }}
             - name: DB_DRIVER
-              value: {{ .Values.knora.env.DB_DRIVER | default "" | quote }}
+              value: "postgres"
             - name: DB_HOST
-              value: {{ .Values.knora.env.DB_HOST | default "" | quote }}
+              value: {{ include "weknora.fullname" . }}-postgresql-hl
             - name: DB_PORT
-              value: {{ .Values.knora.env.DB_PORT | default "" | quote }}
+              value: {{ required "A value for postgresql port is required!" .Values.postgresql.primary.service.ports.postgresql | quote }}
             - name: DB_USER
-              value: {{ .Values.knora.env.DB_USER | default "" | quote }}
+              value: {{ required "A value for postgresql user is required!" .Values.postgresql.auth.username | quote }}
             - name: DB_PASSWORD
-              value: {{ .Values.knora.env.DB_PASSWORD | default "" | quote }}
+              value: {{ required "A value for postgresql psw is required!" .Values.postgresql.auth.password | quote }}
             - name: DB_NAME
-              value: {{ .Values.knora.env.DB_NAME | default "" | quote }}
+              value: {{ required "A value for postgresql db is required!" .Values.postgresql.auth.database | quote }}
             - name: TZ
               value: {{ .Values.knora.env.TZ | default "Asia/Shanghai" | quote }}
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: {{ .Values.knora.env.OTEL_EXPORTER_OTLP_ENDPOINT | default "jaeger:4317" | quote }}
+              value: {{ .Values.knora.env.OTEL_EXPORTER_OTLP_ENDPOINT | default "" | quote }}
             - name: OTEL_SERVICE_NAME
               value: {{ .Values.knora.env.OTEL_SERVICE_NAME | default "WeKnora" | quote }}
             - name: OTEL_TRACES_EXPORTER
-              value: {{ .Values.knora.env.OTEL_TRACES_EXPORTER | default "otlp" | quote }}
+              value: {{ .Values.knora.env.OTEL_TRACES_EXPORTER | default "none" | quote }}
             - name: OTEL_METRICS_EXPORTER
               value: {{ .Values.knora.env.OTEL_METRICS_EXPORTER | default "none" | quote }}
             - name: OTEL_LOGS_EXPORTER
@@ -91,7 +93,7 @@ spec:
             - name: OTEL_PROPAGATORS
               value: {{ .Values.knora.env.OTEL_PROPAGATORS | default "tracecontext,baggage" | quote }}
             - name: RETRIEVE_DRIVER
-              value: {{ .Values.knora.env.RETRIEVE_DRIVER | default "" | quote }}
+              value: {{ .Values.knora.env.RETRIEVE_DRIVER | default "postgres" | quote }}
             - name: ELASTICSEARCH_ADDR
               value: {{ .Values.knora.env.ELASTICSEARCH_ADDR | default "" | quote }}
             - name: ELASTICSEARCH_USERNAME
@@ -103,9 +105,9 @@ spec:
             - name: DOCREADER_ADDR
               value: {{ .Values.knora.env.DOCREADER_ADDR | default ( printf "%s-reader:%s" ( include "weknora.fullname" . ) .Values.reader.service.port ) | quote }}
             - name: STORAGE_TYPE
-              value: {{ .Values.knora.env.STORAGE_TYPE | default "" | quote }}
+              value: {{ .Values.knora.env.STORAGE_TYPE | default "local" | quote }}
             - name: LOCAL_STORAGE_BASE_DIR
-              value: {{ .Values.knora.env.LOCAL_STORAGE_BASE_DIR | default "" | quote }}
+              value: "/data/files"
             - name: MINIO_ENDPOINT
               value: {{ .Values.knora.env.MINIO_ENDPOINT | default "" | quote }}
             - name: MINIO_ACCESS_KEY_ID
@@ -117,19 +119,23 @@ spec:
             - name: OLLAMA_BASE_URL
               value: {{ .Values.knora.env.OLLAMA_BASE_URL | default "" | quote }}
             - name: STREAM_MANAGER_TYPE
-              value: {{ .Values.knora.env.STREAM_MANAGER_TYPE | default "" | quote }}
+              value: {{ .Values.knora.env.STREAM_MANAGER_TYPE | default "redis" | quote }}
             - name: REDIS_ADDR
-              value: {{ printf "%s:%s" (.Values.knora.env.REDIS_HOST | default "") (.Values.knora.env.REDIS_PORT | default "") | quote }}
+              value: {{ printf "%s-redis-headless:%s" (include "weknora.fullname" .) (.Values.redis.master.service.ports.redis ) | quote }}
+            - name: REDIS_HOST
+              value: {{ printf "%s-redis-headless" (include "weknora.fullname" .) | quote }}
+            - name: REDIS_PORT
+              value: {{ .Values.redis.master.service.ports.redis | quote }}
             - name: REDIS_PASSWORD
-              value: {{ .Values.knora.env.REDIS_PASSWORD | default "" | quote }}
+              value: {{ .Values.redis.auth.password | default "" | quote }}
             - name: REDIS_DB
-              value: {{ .Values.knora.env.REDIS_DB | default "" | quote }}
+              value: {{ .Values.knora.env.REDIS_DB | default "0" | quote }}
             - name: REDIS_PREFIX
-              value: {{ .Values.knora.env.REDIS_PREFIX | default "" | quote }}
+              value: {{ .Values.knora.env.REDIS_PREFIX | default "stream:" | quote }}
             - name: ENABLE_GRAPH_RAG
-              value: {{ .Values.knora.env.ENABLE_GRAPH_RAG | default "" | quote }}
+              value: {{ .Values.knora.env.ENABLE_GRAPH_RAG | default "false" | quote }}
             - name: TENANT_AES_KEY
-              value: {{ .Values.knora.env.TENANT_AES_KEY | default "" | quote }}
+              value: {{ .Values.knora.env.TENANT_AES_KEY | default "weknorarag-api-key-secret-secret" | quote }}
             - name: INIT_LLM_MODEL_NAME
               value: {{ .Values.knora.env.INIT_LLM_MODEL_NAME | default "" | quote }}
             - name: INIT_LLM_MODEL_BASE_URL
@@ -156,6 +162,8 @@ spec:
               value: {{ .Values.knora.env.INIT_TEST_TENANT_ID | default "" | quote }}
             - name: INIT_TEST_KNOWLEDGE_BASE_ID
               value: {{ .Values.knora.env.INIT_TEST_KNOWLEDGE_BASE_ID | default "" | quote }}
+            - name: COS_ENABLE_OLD_DOMAIN
+              value: "true"
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -172,3 +180,6 @@ spec:
         - name: weknora-config
           configMap:
             name: weknora-config
+        - name: data-files
+          emptyDir:
+            sizeLimit: 1Gi
