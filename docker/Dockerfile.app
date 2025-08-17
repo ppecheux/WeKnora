@@ -4,8 +4,7 @@ FROM golang:1.24-alpine AS builder
 WORKDIR /app
 
 # Install dependencies
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories && \
-    apk add --no-cache git build-base
+RUN apk add --no-cache git build-base
 
 # 通过构建参数接收敏感信息
 ARG GOPRIVATE_ARG
@@ -37,8 +36,7 @@ FROM alpine:3.17
 WORKDIR /app
 
 # Install runtime dependencies
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories && \
-    apk update && apk upgrade && \
+RUN apk update && apk upgrade && \
     apk add --no-cache build-base postgresql-client mysql-client ca-certificates tzdata sed curl bash supervisor vim wget
 
 # Copy the binary from the builder stage

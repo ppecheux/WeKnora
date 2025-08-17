@@ -78,6 +78,23 @@ spec:
             value: {{ .Values.reader.env.VLM_MODEL_NAME | default "" | quote }}
           - name: VLM_MODEL_API_KEY
             value: {{ .Values.reader.env.VLM_MODEL_API_KEY | default "" | quote }}
+          volumeMounts:
+          - name: empty-dir
+            mountPath: /tmp
+            readOnly: false
+            subPath: "tmp-dir"
+          - name: empty-dir
+            mountPath: /home/user/run
+            readOnly: false
+            subPath: "run-dir"
+          - name: empty-dir
+            mountPath: /home/user/log
+            readOnly: false
+            subPath: "user-log-dir"
+      volumes:
+      - name: empty-dir
+        emptyDir:
+          sizeLimit: 1Gi
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

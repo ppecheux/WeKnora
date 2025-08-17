@@ -57,6 +57,22 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+          volumeMounts:
+          - name: config-volume
+            mountPath: /etc/nginx/nginx.conf
+            subPath: nginx.conf
+            readOnly: true
+          - name: empty-dir
+            mountPath: /var/nginx-writable/temp
+            subPath: temp
+            readOnly: false
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ include "weknora.fullname" . }}-front-nginx-config
+        - name: empty-dir
+          emptyDir:
+            sizeLimit: 1Gi
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

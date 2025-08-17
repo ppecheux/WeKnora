@@ -47,3 +47,9 @@ skaffold-render.yaml
 ### macOS
 # General
 .DS_Store
+postgresql.values.default.yaml
+postgresql.values.schema.json
+redis.values.default.yaml
+wkr-skaffold.png
+wkr.png
+rendered.yaml
