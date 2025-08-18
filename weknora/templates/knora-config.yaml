@@ -7,5 +7,5 @@ metadata:
     app.kubernetes.io/component: knora
     app.kubernetes.io/part-of: weknora
 data:
-  weknora.conf: |
+  config.yaml: |
     {{- .Files.Get "config/config.yaml" | nindent 4 }}

@@ -24,11 +24,18 @@ ENV CGO_ENABLED=1
 # Install migrate tool
 RUN go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 
-# Copy source code
-COPY . .
+COPY Makefile .
+COPY client ./client 
+COPY scripts ./scripts 
+COPY migrations ./migrations 
+COPY dataset ./dataset 
+COPY cmd ./cmd
+COPY internal ./internal
+COPY config ./config
+COPY services ./services
 
 # Build the application
-RUN make build-prod
+RUN ls -lla && make build-prod
 
 # Final stage
 FROM alpine:3.17

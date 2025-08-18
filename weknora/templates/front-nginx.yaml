@@ -8,7 +8,7 @@ metadata:
 data:
   nginx.conf: |
     # master_process on; # No need to specify when running rootless
-
+    pid /tmp/nginx.pid;
 
     events {
         worker_connections 1024;
@@ -27,7 +27,7 @@ data:
         scgi_temp_path        /var/nginx-writable/temp/scgi;
         
         server {
-            listen 80;
+            listen 8080;
             server_name localhost;
             client_max_body_size 50M;
 

@@ -45,7 +45,7 @@ front:
     # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
     type: ClusterIP
     # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
-    port: 80
+    port: 8080
 
   image:
     repository: ""
@@ -210,6 +210,11 @@ postgresql:
       enabled: true
       size: 8Gi
       storageClass: ""
+    extraVolumeMounts:
+      - name: empty-dir
+        mountPath: /var/run
+        subPath: var/run
+        writable: true
   image:
     repository: paradedb/paradedb
     tag: "0.17.3"
@@ -220,11 +225,13 @@ postgresql:
 redis:
   enabled: true
   image:
-    repository: redis
-    tag: alpine3.22
-    digest: sha256:7521abdff715d396aa482183942f3fe643344287c29ccb66eee16ac08a92190f
+    repository: bitnami/redis
+    tag: 8.2.0-debian-12-r0
+    digest: sha256:942271e7b024af7464a6de564d453a35bf4e674afe81333e6fe6c5141b100e84
   master:
     service:
       ports:
         redis: 6379
   architecture: "standalone"
+  command:
+    - /bin/sh

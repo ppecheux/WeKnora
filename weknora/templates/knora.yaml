@@ -34,6 +34,12 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      initContainers:
+        - name: init-knora
+          image: nicolaka/netshoot:v0.14@sha256:7f08c4aff13ff61a35d30e30c5c1ea8396eac6ab4ce19fd02d5a4b3b5d0d09a2
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c", 'while true; do nc -zv {{ .Release.Name }}-postgresql-hl {{ .Values.postgresql.primary.service.ports.postgresql }} && break || sleep 1; done']
+
       containers:
         - name: knora
           {{- with .Values.securityContext }}
@@ -61,15 +67,28 @@ spec:
           volumeMounts:
             - name: weknora-config
               mountPath: /app/config
+              readOnly: true
             - name: data-files
               mountPath: /data/files
+            - name: empty-dir
+              mountPath: /tmp
+              subPath: tmp
+              readOnly: false
+            - name: empty-dir
+              mountPath: /home/appuser/run
+              readOnly: false
+              subPath: "run-dir"
+            - name: empty-dir
+              mountPath: /home/appuser/log
+              readOnly: false
+              subPath: "user-log-dir"
           env:
             - name: GIN_MODE
               value: {{ .Values.knora.env.GIN_MODE | default "release" | quote }}
             - name: DB_DRIVER
               value: "postgres"
             - name: DB_HOST
-              value: {{ include "weknora.fullname" . }}-postgresql-hl
+              value: {{ .Release.Name }}-postgresql-hl
             - name: DB_PORT
               value: {{ required "A value for postgresql port is required!" .Values.postgresql.primary.service.ports.postgresql | quote }}
             - name: DB_USER
@@ -180,6 +199,17 @@ spec:
         - name: weknora-config
           configMap:
             name: weknora-config
-        - name: data-files
+        - name: empty-dir
           emptyDir:
             sizeLimit: 1Gi
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: data-files
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "8Gi"

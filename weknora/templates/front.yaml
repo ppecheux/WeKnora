@@ -64,7 +64,11 @@ spec:
             readOnly: true
           - name: empty-dir
             mountPath: /var/nginx-writable/temp
-            subPath: temp
+            subPath: var/nginx-writable/temp
+            readOnly: false
+          - name: empty-dir
+            mountPath: /tmp
+            subPath: tmp
             readOnly: false
       volumes:
         - name: config-volume
