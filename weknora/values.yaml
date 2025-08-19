@@ -52,12 +52,10 @@ front:
     tag: ""
 
   livenessProbe:
-    httpGet:
-      path: /
+    tcpSocket:
       port: http
   readinessProbe:
-    httpGet:
-      path: /
+    tcpSocket:
       port: http
   resources:
     limits:
@@ -77,9 +75,9 @@ knora:
     repository: ""
     tag: ""
 
-  livenessProbe:
-    httpGet:
-      port: http
+  # livenessProbe:
+  #   httpGet:
+  #     port: http
   readinessProbe:
     httpGet:
       port: http

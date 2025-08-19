@@ -35,10 +35,22 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       initContainers:
-        - name: init-knora
+        - name: wait-for-postgresql
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           image: nicolaka/netshoot:v0.14@sha256:7f08c4aff13ff61a35d30e30c5c1ea8396eac6ab4ce19fd02d5a4b3b5d0d09a2
           imagePullPolicy: IfNotPresent
           command: ["/bin/sh", "-c", 'while true; do nc -zv {{ .Release.Name }}-postgresql-hl {{ .Values.postgresql.primary.service.ports.postgresql }} && break || sleep 1; done']
+        - name: wait-for-redis
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: nicolaka/netshoot:v0.14@sha256:7f08c4aff13ff61a35d30e30c5c1ea8396eac6ab4ce19fd02d5a4b3b5d0d09a2
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c", 'while true; do nc -zv {{ .Release.Name }}-redis-master {{ .Values.redis.master.service.ports.redis }} && break || sleep 1; done']
 
       containers:
         - name: knora
