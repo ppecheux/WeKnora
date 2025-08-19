@@ -215,6 +215,12 @@ postgresql:
         mountPath: /var/run
         subPath: var/run
         writable: true
+    extraEnvVars:
+      - name: POSTGRES_USER
+        value: *pgUser
+      - name: POSTGRES_DB
+        value: weknora
+
   image:
     repository: paradedb/paradedb
     tag: "0.17.3"
@@ -235,3 +241,5 @@ redis:
   architecture: "standalone"
   command:
     - /bin/sh
+  auth:
+    password: "your-redis-password"

@@ -122,7 +122,7 @@ spec:
             - name: ELASTICSEARCH_INDEX
               value: {{ .Values.knora.env.ELASTICSEARCH_INDEX | default "" | quote }}
             - name: DOCREADER_ADDR
-              value: {{ .Values.knora.env.DOCREADER_ADDR | default ( printf "%s-reader:%s" ( include "weknora.fullname" . ) .Values.reader.service.port ) | quote }}
+              value: {{ .Values.knora.env.DOCREADER_ADDR | default ( printf "%s-reader:%d" ( include "weknora.fullname" . ) (int .Values.reader.service.port) ) | quote }}
             - name: STORAGE_TYPE
               value: {{ .Values.knora.env.STORAGE_TYPE | default "local" | quote }}
             - name: LOCAL_STORAGE_BASE_DIR
@@ -140,13 +140,16 @@ spec:
             - name: STREAM_MANAGER_TYPE
               value: {{ .Values.knora.env.STREAM_MANAGER_TYPE | default "redis" | quote }}
             - name: REDIS_ADDR
-              value: {{ printf "%s-redis-headless:%s" (include "weknora.fullname" .) (.Values.redis.master.service.ports.redis ) | quote }}
+              value: {{ printf "%s-redis-master:%d" .Release.Name (int .Values.redis.master.service.ports.redis ) | quote }}
             - name: REDIS_HOST
-              value: {{ printf "%s-redis-headless" (include "weknora.fullname" .) | quote }}
+              value: {{ printf "%s-redis-master" .Release.Name | quote }}
             - name: REDIS_PORT
               value: {{ .Values.redis.master.service.ports.redis | quote }}
             - name: REDIS_PASSWORD
-              value: {{ .Values.redis.auth.password | default "" | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-redis
+                  key: redis-password
             - name: REDIS_DB
               value: {{ .Values.knora.env.REDIS_DB | default "0" | quote }}
             - name: REDIS_PREFIX
