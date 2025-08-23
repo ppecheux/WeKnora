@@ -36,3 +36,5 @@ deploy:
           front.image.tag: "{{.IMAGE_TAG_frontend}}"
           reader.image.repository: "{{.IMAGE_REPO_docreader}}"
           reader.image.tag: "{{.IMAGE_TAG_docreader}}"
+          jaeger.externalDatabase.host: '{{ cmd "bash" "-c" "cat skaffold.yaml | head -n 4 | tail -n 1 | awk ''{print $2}''" }}-cassandra'
+          jaeger.externalDatabase.existingSecret: '{{ cmd "bash" "-c" "cat skaffold.yaml | head -n 4 | tail -n 1 | awk ''{print $2}''" }}-cassandra'

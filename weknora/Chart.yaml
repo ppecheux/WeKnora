@@ -31,3 +31,11 @@ dependencies:
     version: 22.0.1
     repository: https://charts.bitnami.com/bitnami
     condition: redis.enabled
+  - name: jaeger
+    version: 6.0.5
+    repository: https://charts.bitnami.com/bitnami
+    condition: jaeger.enabled
+  - name: cassandra
+    version: 12.3.11
+    repository: https://charts.bitnami.com/bitnami
+    condition: cassandra.enabled

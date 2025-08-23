@@ -53,3 +53,5 @@ redis.values.default.yaml
 wkr-skaffold.png
 wkr.png
 rendered.yaml
+cassandra.values.default.yaml
+jaeger.values.default.yaml

@@ -5,5 +5,11 @@ dependencies:
 - name: redis
   repository: https://charts.bitnami.com/bitnami
   version: 22.0.1
-digest: sha256:00981a7234fe4b2b66a3b6856736e073fb3fcb91b32a17d89c7386828c0474dd
-generated: "2025-08-17T17:30:32.34163491+02:00"
+- name: jaeger
+  repository: https://charts.bitnami.com/bitnami
+  version: 6.0.5
+- name: cassandra
+  repository: https://charts.bitnami.com/bitnami
+  version: 12.3.11
+digest: sha256:23d00a19a8b6b75cb81943e15827ee424c385a2405647eced9fa7b1c3717c39d
+generated: "2025-08-23T11:02:45.763644564+02:00"

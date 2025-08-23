@@ -51,7 +51,16 @@ spec:
           image: nicolaka/netshoot:v0.14@sha256:7f08c4aff13ff61a35d30e30c5c1ea8396eac6ab4ce19fd02d5a4b3b5d0d09a2
           imagePullPolicy: IfNotPresent
           command: ["/bin/sh", "-c", 'while true; do nc -zv {{ .Release.Name }}-redis-master {{ .Values.redis.master.service.ports.redis }} && break || sleep 1; done']
-
+        {{- if .Values.jaeger.enabled }}
+        - name: wait-for-jaeger
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: nicolaka/netshoot:v0.14@sha256:7f08c4aff13ff61a35d30e30c5c1ea8396eac6ab4ce19fd02d5a4b3b5d0d09a2
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c", 'while true; do nc -zv {{ .Release.Name }}-jaeger-collector {{ .Values.jaeger.service.ports.otlp.grpc }} && break || sleep 1; done']
+        {{- end }}
       containers:
         - name: knora
           {{- with .Values.securityContext }}
@@ -112,11 +121,11 @@ spec:
             - name: TZ
               value: {{ .Values.knora.env.TZ | default "Asia/Shanghai" | quote }}
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: {{ .Values.knora.env.OTEL_EXPORTER_OTLP_ENDPOINT | default "" | quote }}
+              value: {{ printf "%s-jaeger-collector:%d" .Release.Name ( int .Values.jaeger.service.ports.otlp.grpc ) | quote }}
             - name: OTEL_SERVICE_NAME
               value: {{ .Values.knora.env.OTEL_SERVICE_NAME | default "WeKnora" | quote }}
             - name: OTEL_TRACES_EXPORTER
-              value: {{ .Values.knora.env.OTEL_TRACES_EXPORTER | default "none" | quote }}
+              value: {{ .Values.knora.env.OTEL_TRACES_EXPORTER | default "otlp" | quote }}
             - name: OTEL_METRICS_EXPORTER
               value: {{ .Values.knora.env.OTEL_METRICS_EXPORTER | default "none" | quote }}
             - name: OTEL_LOGS_EXPORTER

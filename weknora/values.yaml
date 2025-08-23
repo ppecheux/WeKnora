@@ -212,10 +212,8 @@ postgresql:
       - name: empty-dir
         mountPath: /var/run
         subPath: var/run
-        writable: true
+        readonly: false
     extraEnvVars:
-      - name: POSTGRES_USER
-        value: *pgUser
       - name: POSTGRES_DB
         value: weknora
 
@@ -241,3 +239,59 @@ redis:
     - /bin/sh
   auth:
     password: "your-redis-password"
+jaeger:
+  enabled: true
+  service:
+    ## @param collector.service.type Jaeger service type
+    ##
+    type: ClusterIP
+    ## Jaeger collector ports to expose
+    ## ref: https://www.jaegertracing.io/docs/latest/architecture/apis/
+    ports:
+      ## Otlp ports to expose
+      ##
+      otlp:
+        ## @param collector.service.ports.otlp.grpc Accepts traces in OpenTelemetry OTLP format over gRPC
+        ##
+        grpc: 4317
+        ## @param collector.service.ports.otlp.http Accepts traces in OpenTelemetry OTLP format over HTTP
+        ##
+        http: 4318
+      ## Legacy Jaeger Write API. Maintained for backward-compatibility
+      ##
+      jaeger:
+        ## @param collector.service.ports.jaeger.grpc Legacy Jaeger protobuf via gRPC API port
+        ##
+        grpc: 14250
+        ## @param collector.service.ports.jaeger.thrift_http Legacy Jaeger Thrift over HTTP API port
+        ##
+        thrift_http: 14268
+      ## @param collector.service.ports.zipkin can accept Zipkin spans in Thrift, JSON and Proto (disabled by default)
+      ##
+      zipkin: 9411
+      ## @param collector.service.ports.metrics Jaeger collector prometheus metrics port
+      ##
+      metrics: 8888
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 10m
+      memory: 64Mi
+  externalDatabase:
+    host: "wkr-cassandra"
+    existingSecret: "wkr-cassandra"
+    existingSecretPasswordKey: "cassandra-password"
+    dbUser:
+      user: "cassandra"
+      password: "cassandra"
+  cassandra:
+    enabled: false
+    # resourcesPreset: "small"
+cassandra:
+  enabled: true
+  dbUser:
+    user: cassandra
+    forcePassword: false
+    password: "cassandra"
