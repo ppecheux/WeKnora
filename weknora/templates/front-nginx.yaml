@@ -14,10 +14,16 @@ data:
         worker_connections 1024;
     }
 
+    include /etc/nginx/conf.d/*.conf;
+
+  default.conf: |
     http {
         # All log files must be sent to the writable volume
         error_log /dev/stderr warn;
         access_log /dev/stdout combined;
+        	include /etc/nginx/mime.types;
+        default_type application/octet-stream;
+        charset UTF-8; 
         # access_log /var/nginx-writable/logs/access.log; # Uncomment if needed
         # Set all temporary and cache paths to the writable volume
         client_body_temp_path /var/nginx-writable/temp/client_body;

@@ -29,11 +29,25 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "weknora.serviceAccountName" . }}
-      {{- with .Values.podSecurityContext }}
-      securityContext:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       initContainers:
+        - name: copy-config
+          image: busybox:latest
+          command:
+            - sh
+            - -c
+            - |              
+              cp /etc/nginx-config-readonly/default.conf /etc/nginx/conf.d/default.conf
+              chown 1000:1000 /etc/nginx/conf.d/default.conf
+          volumeMounts:
+          - name: nginx-config-from-cm
+            mountPath: /etc/nginx-config-readonly
+            readOnly: true
+          - name: empty-dir
+            mountPath: /etc/nginx/conf.d
+            subPath: etc/nginx/conf.d
+            readOnly: false
+          securityContext:
+            runAsUser: 0
         - name: wait-for-knora
           {{- with .Values.securityContext }}
           securityContext:
@@ -68,10 +82,10 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
-          - name: config-volume
+          - name: nginx-config-from-cm
             mountPath: /etc/nginx/nginx.conf
             subPath: nginx.conf
-            readOnly: true
+            readOnly: false
           - name: empty-dir
             mountPath: /var/nginx-writable/temp
             subPath: var/nginx-writable/temp
@@ -80,8 +94,12 @@ spec:
             mountPath: /tmp
             subPath: tmp
             readOnly: false
+          - name: empty-dir
+            mountPath: /etc/nginx/conf.d
+            subPath: etc/nginx/conf.d
+            readOnly: false
       volumes:
-        - name: config-volume
+        - name: nginx-config-from-cm
           configMap:
             name: {{ include "weknora.fullname" . }}-front-nginx-config
         - name: empty-dir
