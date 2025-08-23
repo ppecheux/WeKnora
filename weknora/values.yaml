@@ -78,9 +78,13 @@ knora:
   # livenessProbe:
   #   httpGet:
   #     port: http
+  # readinessProbe:
+  #   httpGet:
+  #     port: http
+  #     path: /health
   readinessProbe:
-    httpGet:
-      port: http
+    tcpSocket:
+      port: 8080
   resources:
     limits:
       cpu: 500m
@@ -153,8 +157,10 @@ reader:
     tcpSocket:
       port: http
   readinessProbe:
-    tcpSocket:
+    httpGet:
       port: http
+      path: /
+
   env: {}
   resources:
     limits:
