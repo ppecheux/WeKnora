@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: {{ include "weknora.fullname" . }}-knora
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "weknora.labels" . | nindent 4 }}
     app.kubernetes.io/component: knora

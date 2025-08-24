@@ -1,0 +1,65 @@
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ include "weknora.fullname" . }}-knora
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "weknora.labels" . | nindent 4 }}
+    app.kubernetes.io/component: knora
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "weknora.labels" . | nindent 6 }}
+      app.kubernetes.io/component: knora
+  policyTypes:
+    - Ingress
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "weknora.labels" . | nindent 14 }}
+              app.kubernetes.io/component: reader
+      ports:
+        - port: {{ .Values.reader.service.port }}
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: {{ .Release.Name }}
+              app.kubernetes.io/name: postgresql
+      ports:
+        - port: 5432
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: {{ .Release.Name }}
+              app.kubernetes.io/name: redis
+      ports:
+        - port: 6379
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: {{ .Release.Name }}
+              app.kubernetes.io/name: jaeger
+              app.kubernetes.io/component: collector
+      ports:
+        - port: {{ .Values.jaeger.collector.service.port }}
+          protocol: TCP
+    - ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "weknora.labels" . | nindent 14 }}
+              app.kubernetes.io/component: front
+      ports:
+        - port: {{ .Values.knora.service.port }}
+          protocol: TCP

@@ -1,0 +1,41 @@
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ include "weknora.fullname" . }}-front
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "weknora.labels" . | nindent 4 }}
+    app.kubernetes.io/component: front
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "weknora.labels" . | nindent 6 }}
+      app.kubernetes.io/component: front
+      service: front
+  policyTypes:
+    - Ingress
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "weknora.labels" . | nindent 14 }}
+              app.kubernetes.io/component: knora
+      ports:
+        - port: {{ .Values.knora.service.port }}
+          protocol: TCP
+    - ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "weknora.labels" . | nindent 14 }}
+              app.kubernetes.io/component: front
+              is-test: "true"
+      ports:
+      - port: {{ .Values.front.service.port }}
+        protocol: TCP

@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "weknora.fullname" . }}-front
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "weknora.labels" . | nindent 4 }}
     app.kubernetes.io/component: front
@@ -23,6 +24,7 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
         app.kubernetes.io/component: front
+        service: front
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:

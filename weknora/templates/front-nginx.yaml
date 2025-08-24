@@ -2,6 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ include "weknora.fullname" . }}-front-nginx-config
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "weknora.labels" . | nindent 4 }}
     app.kubernetes.io/component: front

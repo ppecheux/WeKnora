@@ -2,6 +2,7 @@ kind: ConfigMap
 apiVersion: v1
 metadata:
   name: weknora-config
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "weknora.labels" . | nindent 4 }}
     app.kubernetes.io/component: knora

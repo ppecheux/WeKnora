@@ -174,14 +174,14 @@ image:
 
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:
-  enabled: false
+  enabled: true
   className: ""
   annotations:
     {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   hosts:
-    - host: chart-example.local
+    - host: weknora.local
       paths:
         - path: /
           pathType: ImplementationSpecific
@@ -221,6 +221,8 @@ postgresql:
     extraEnvVars:
       - name: POSTGRES_DB
         value: weknora
+    networkPolicy:
+      allowExternalEgress: false
 
   image:
     repository: paradedb/paradedb
@@ -229,6 +231,7 @@ postgresql:
   global:
     security:
       allowInsecureImages: true
+
 redis:
   enabled: true
   image:
@@ -244,6 +247,9 @@ redis:
     - /bin/sh
   auth:
     password: "your-redis-password"
+  networkPolicy:
+    allowExternalEgress: false
+
 jaeger:
   enabled: true
   service:
@@ -277,13 +283,28 @@ jaeger:
       ## @param collector.service.ports.metrics Jaeger collector prometheus metrics port
       ##
       metrics: 8888
-  resources:
-    limits:
-      cpu: 500m
-      memory: 512Mi
-    requests:
-      cpu: 10m
-      memory: 64Mi
+  collector:
+    networkPolicy:
+      allowExternalEgress: false
+      # extraEgress:
+      #   - ports:
+      #       - port: 1000-65535
+      #         protocol: TCP
+      #     to:
+      #       - podSelector:
+      #         matchLabels:
+      #           app.kubernetes.io/name: cassandra
+  query:
+    networkPolicy:
+      allowExternalEgress: false
+      # extraEgress:
+      #   - ports:
+      #       - port: 1000-65535
+      #         protocol: TCP
+      #     to:
+      #       - podSelector:
+      #           matchLabels:
+      #             app.kubernetes.io/name: cassandra
   externalDatabase:
     host: "wkr-cassandra"
     existingSecret: "wkr-cassandra"
@@ -300,3 +321,5 @@ cassandra:
     user: cassandra
     forcePassword: false
     password: "cassandra"
+  networkPolicy:
+    allowExternalEgress: false
