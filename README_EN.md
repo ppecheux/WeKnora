@@ -116,6 +116,16 @@ cp .env.example .env
 make start-all
 ```
 
+#### ③ Start the services (backup)
+
+```bash
+# Start ollama services (Optional)
+ollama serve > /dev/null 2>&1 &
+
+# Start the service
+docker compose up -d
+```
+
 #### ④ Stop the services
 
 ```bash

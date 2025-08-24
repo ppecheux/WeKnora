@@ -116,6 +116,16 @@ cp .env.example .env
 make start-all
 ```
 
+#### ③ 启动服务备选
+
+```bash
+# 启动 ollama 服务 (可选)
+ollama serve > /dev/null 2>&1 &
+
+# 启动服务
+docker compose up -d
+```
+
 #### ④ 停止服务
 
 ```bash

@@ -1,8 +1,6 @@
 services:
   app:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.app
+    image: wechatopenai/weknora-app:latest
     container_name: WeKnora-app
     ports:
       - "8080:8080"
@@ -90,9 +88,7 @@ services:
       - WeKnora-network
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    image: wechatopenai/weknora-ui:latest
     container_name: WeKnora-frontend
     ports:
       - "80:80"
@@ -103,11 +99,7 @@ services:
     restart: unless-stopped
 
   docreader:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.docreader
-      args:
-        - PLATFORM=${PLATFORM:-linux/amd64}
+    image: wechatopenai/weknora-docreader:latest
     container_name: WeKnora-docreader
     ports:
       - "50051:50051"
@@ -164,6 +156,7 @@ services:
       - "${DB_PORT}:5432"
     environment:
       - POSTGRES_USER=${DB_USER}
+      # NOCC:hardcode-password(工具误报)
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${DB_NAME}
     volumes:

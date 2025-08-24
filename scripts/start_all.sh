@@ -305,7 +305,7 @@ check_platform() {
         log_warning "未识别的平台类型：$(uname -m)，将使用默认平台 linux/amd64"
         export PLATFORM="linux/amd64"
     fi
-    log_info "当前平台：$PLATFORM"   
+    log_info "当前平台：$PLATFORM"
 }
 
 # 启动Docker容器
